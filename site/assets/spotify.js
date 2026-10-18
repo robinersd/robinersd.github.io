@@ -53,6 +53,7 @@ export function enableRobinerSpotify(playlists, defaultMusic = playlists[0]) {
   const help = dialog.querySelector('.spotify-play-help');
   const position = enableRobinerSpotifyPosition(dialog);
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let initialAutoplayPending = true;
   let opener,
     selected,
     controller,
@@ -86,7 +87,7 @@ export function enableRobinerSpotify(playlists, defaultMusic = playlists[0]) {
       'aria-label',
       fallback || needsNativePlay
         ? 'Open Spotify playback controls'
-        : playRequested && !ready
+        : playRequested && !ready && !automaticRequest
           ? 'Cancel Spotify playback request'
           : paused
             ? 'Play Spotify music'
@@ -163,6 +164,7 @@ export function enableRobinerSpotify(playlists, defaultMusic = playlists[0]) {
       .forEach((button) => button.setAttribute('aria-expanded', 'true'));
   }
   function stopMusic() {
+    initialAutoplayPending = false;
     position.hide();
     generation++;
     cancelClosing();
@@ -203,6 +205,7 @@ export function enableRobinerSpotify(playlists, defaultMusic = playlists[0]) {
     frame.referrerPolicy = 'strict-origin-when-cross-origin';
   }
   function selectPlaylist(index) {
+    initialAutoplayPending = false;
     useQueue = false;
     automaticRequest = false;
     return selectEntity(playlists[index]);
@@ -280,6 +283,7 @@ export function enableRobinerSpotify(playlists, defaultMusic = playlists[0]) {
           paused = data.isPaused !== false;
           buffering = !!data.isBuffering;
           if (!paused) {
+            initialAutoplayPending = false;
             if (wasPaused) pauseRequested = false;
             clearTimeout(playAttemptTimer);
             needsNativePlay = false;
@@ -292,6 +296,7 @@ export function enableRobinerSpotify(playlists, defaultMusic = playlists[0]) {
           if (controller !== created || !selected) return;
           if (supersededTracks.has(event?.data?.playingURI)) return;
           paused = false;
+          initialAutoplayPending = false;
           buffering = false;
           pauseRequested = false;
           clearTimeout(playAttemptTimer);
@@ -329,6 +334,7 @@ export function enableRobinerSpotify(playlists, defaultMusic = playlists[0]) {
   }
 
   function requestPlayback(automatic = false) {
+    if (!automatic) initialAutoplayPending = false;
     pauseRequested = false;
     // PLAY initializes newly selected music; RESUME continues music that
     // has already started. Send this synchronously from a ready wave tap.
@@ -385,9 +391,49 @@ export function enableRobinerSpotify(playlists, defaultMusic = playlists[0]) {
   document.addEventListener('click', (event) => {
     const button = event.target.closest?.('[data-spotify-open]');
     if (!button || (dialog.open && !dialog.classList.contains('is-spotify-mini'))) return;
+    initialAutoplayPending = false;
     opener = button;
     expand();
   });
+  function retryInitialAutoplay(event) {
+    if (!event.isTrusted || !initialAutoplayPending) return;
+    if (event.type === 'mousedown' && event.button !== 0) return;
+    if (
+      event.type === 'keydown' &&
+      (!['Enter', ' '].includes(event.key) ||
+        event.repeat ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.altKey)
+    )
+      return;
+    // Explicit Spotify controls own their gestures. Never undo a pause, stop,
+    // playlist choice, or an intentional visit to the native player controls.
+    if (event.target.closest?.('#robiner-spotify-dialog, [data-spotify-open]')) return;
+    if (
+      !selected ||
+      !paused ||
+      hasPlayed ||
+      fallback ||
+      !dialog.classList.contains('is-spotify-mini')
+    )
+      return;
+    // An early page tap cannot unlock an iframe that has not loaded yet.
+    // Preserve the retry for the next real click/tap after readiness.
+    if (!ready || !controller) return;
+    initialAutoplayPending = false;
+    playRequested = true;
+    automaticRequest = false;
+    // Send PLAY during the gesture on phones and desktops. If Spotify still
+    // blocks it, the wave exposes the official player's native Play control.
+    fulfillPlayRequest();
+    reflectPlayback();
+  }
+  document.addEventListener('click', retryInitialAutoplay);
+  document.addEventListener('keydown', retryInitialAutoplay);
+  // A genuine left-button press also covers a desktop drag that never emits
+  // click. It does not intercept dragging or react to hover/mouse movement.
+  document.addEventListener('mousedown', retryInitialAutoplay, { capture: true, passive: true });
   dialog.querySelectorAll('[data-spotify-playlist]').forEach((button) => {
     button.addEventListener('click', () => selectPlaylist(Number(button.dataset.spotifyPlaylist)));
   });
@@ -400,12 +446,15 @@ export function enableRobinerSpotify(playlists, defaultMusic = playlists[0]) {
   });
   dialog.querySelector('.spotify-stop').addEventListener('click', stopMusic);
   toggle.addEventListener('click', () => {
+    initialAutoplayPending = false;
     if (fallback || needsNativePlay) {
       expand();
       return;
     }
     if (!ready || !controller) {
-      playRequested = !playRequested;
+      // The first wave tap requests playback even if startup autoplay was
+      // already queued. A second explicit tap can cancel that manual request.
+      playRequested = automaticRequest || !playRequested;
       automaticRequest = false;
       if (!selected) selectEntity(defaultTrack, true);
       reflectPlayback();
@@ -461,7 +510,7 @@ export function enableRobinerSpotify(playlists, defaultMusic = playlists[0]) {
     if (reducedMotion.matches && closing) finishClose();
   });
   // Attempt playback once Spotify is ready. If the browser blocks audible
-  // autoplay, the visible wave remains a direct, visitor-initiated play button.
+  // autoplay, the first ready page click/tap can retry; the wave also plays directly.
   reflectPlayback();
   minimize();
   selectEntity(defaultTrack, true);

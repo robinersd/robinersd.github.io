@@ -1,0 +1,4 @@
+[functions.portfolio-community]
+# The handler validates the new publishable apikey header itself, and requires
+# a signed session token for feedback/heartbeat. These keys are not JWTs.
+verify_jwt = false

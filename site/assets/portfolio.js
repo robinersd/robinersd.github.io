@@ -20,13 +20,22 @@ import {
   spotifyPlaylists,
   spotifyQueue,
   skillPreviews,
-} from './data.js?v=skills-mobile-71';
+} from './data.js?v=name-menu-88';
 import { enableRobinerMotion } from './motion.js?v=chat-56';
 import { enableRobinerProjectDeck } from './project-deck.js?v=card-viewers-60';
 import { enableRobinerProfile } from './profile.js?v=profile-cutout-65';
 import { enableRobinerNavigation, basePath } from './navigation.js?v=v2-fix';
 import { renderPixelGallery, enablePixelGallery } from './pixel-gallery.js?v=chat-56';
-import { enableRobinerSpotify } from './spotify.js?v=music-profile-63';
+import { enableRobinerSpotify } from './spotify.js?v=spotify-activation-74';
+import { enableSectionTracker } from './section-tracker.js?v=sidebar-contact-85';
+import { enableTextType } from './text-type.js?v=spotify-hint-86';
+import {
+  renderCommunityPanel,
+  renderCommunityVisitors,
+  renderFeedbackDialog,
+  enablePortfolioCommunity,
+} from './community.js?v=spotify-hint-86';
+import { communityConfig } from './community-config.js?v=community-live-83';
 
 // Escape content before inserting it into the page.
 function escapeHtml(value) {
@@ -114,7 +123,7 @@ function socialDock() {
 }
 
 function animatedSkillsSection() {
-  return /* HTML */ `<section id="skills">
+  return /* HTML */ `<section id="skills" data-scroll-section="Skills">
     ${sectionHeader('Skills & tools', `<a class="text-link" href="${basePath}/tech-stack">View all</a>`)}
     ${renderStaggeredSkills(profile.skills, skillPreviews, skillIcons, text)}
   </section>`;
@@ -218,7 +227,7 @@ function projectCard(project) {
 }
 
 function educationSection() {
-  return /* HTML */ `<section>
+  return /* HTML */ `<section id="education" data-scroll-section="Education">
     ${sectionHeader('Education')}
     <div class="timeline">
       ${education
@@ -239,7 +248,7 @@ function educationSection() {
 }
 
 function awardSection() {
-  return /* HTML */ `<section>
+  return /* HTML */ `<section id="recognition" data-scroll-section="Recognition">
     ${sectionHeader('Recognition')}
     <article class="award-card">
       <div>
@@ -279,7 +288,7 @@ function awardSection() {
 }
 
 function contactSection() {
-  return /* HTML */ `<section id="contact" class="contact-section">
+  return /* HTML */ `<section id="contact" class="contact-section" data-scroll-section="Contact">
     <span class="eyebrow">Let’s connect</span>
     <h2>Have a project in mind?</h2>
     <p>
@@ -299,7 +308,7 @@ function contactSection() {
 }
 
 function gallerySection() {
-  return /* HTML */ `<section id="gallery">
+  return /* HTML */ `<section id="gallery" data-scroll-section="Gallery">
     ${sectionHeader('Gallery', `<a class="text-link" href="${basePath}/gallery">View gallery</a>`)}
     <p class="muted gallery-intro">
       A few moments from my life, classmates, and hands-on projects.
@@ -626,21 +635,21 @@ function chatWidget() {
         />
         <path d="M7 11h10M7 15h6" />
       </svg>
-      Ask about Robiner
+      <span>Ask about Robiner</span>
     </button>
   </aside>`;
 }
 
 function homePage() {
+  const musicHint = 'On the left side, tap the Spotify wave to stop the music.';
+  const typedHint = `<span class="text-type" data-text-type="${musicHint}"><span class="text-type__sr">${musicHint}</span><span class="text-type__measure" aria-hidden="true">${musicHint}_</span><span class="text-type__content" aria-hidden="true"><span data-text-type-output>${musicHint}</span><span class="text-type__caret">&#8203;</span></span><span class="text-type__cursor text-type__cursor--underscore" aria-hidden="true" hidden><span class="text-type__blink"><span class="text-type__shape"></span></span></span></span>`;
   return /* HTML */ `${renderHomeStars()}
-    <section class="hero">
+    <section class="hero" id="intro" data-scroll-section="Intro">
       <div class="hero-top">
         ${profilePortrait()}
         <div class="hero-copy">
           <div class="hero-heading">
-            <span class="eyebrow location"
-              ><span class="status-dot"></span>${text(profile.location)}</span
-            >
+            <span class="eyebrow location spotify-instruction">${typedHint}</span>
             <h1 data-encrypted-name aria-label="${text(profile.name)}">${profileName()}</h1>
             <p class="job-title">${text(profile.title)}</p>
           </div>
@@ -653,11 +662,11 @@ function homePage() {
         ${socialDock()}
       </div>
     </section>
-    <section>
+    <section id="about" data-scroll-section="About">
       ${sectionHeader('About me')}
       <p>${text(profile.about)}</p>
     </section>
-    <section>
+    <section id="projects" data-scroll-section="Projects">
       ${sectionHeader('Selected projects', '<a class="text-link" href="/projects">View all</a>')}${projectDeck()}
     </section>
     ${animatedSkillsSection()}
@@ -755,34 +764,43 @@ function renderPage({ partial = false } = {}) {
     document.querySelector('#root').innerHTML = /* HTML */ ` <header>
         <nav class="container site-nav" aria-label="Main navigation">
           ${themeSwitch()}
-          <div class="nav-links">
-            ${[
-              ['/projects', 'Projects'],
-              ['/highlights', 'Highlights'],
-              ['/gallery', 'Gallery'],
-              ['/contact', 'Contact'],
-            ]
-              .map(
-                ([href, label]) =>
-                  /* HTML */ `<a
-                    href="${basePath}${href}"
-                    ${path === href ? 'aria-current="page"' : ''}
-                    >${label}</a
-                  >`,
-              )
-              .join('')}
-          </div>
+          <button
+            type="button"
+            id="sidebar-toggle"
+            class="sidebar-toggle"
+            aria-label="Open page menu"
+            aria-expanded="false"
+            aria-controls="portfolio-sidebar"
+          >
+            <span class="sidebar-toggle-lines" aria-hidden="true"><i></i><i></i><i></i></span>
+          </button>
         </nav>
       </header>
       <main class="container" id="main" tabindex="-1">${content}</main>
+      <aside
+        id="portfolio-sidebar"
+        class="portfolio-sidebar"
+        aria-label="Page menu and visitors"
+        hidden
+      >
+        <div class="sidebar-scroll-content">
+          <p class="section-tracker-heading">On this page</p>
+          <nav
+            id="sidebar-section-links"
+            class="section-tracker-links"
+            aria-label="Page sections"
+          ></nav>
+          ${renderCommunityPanel()}
+        </div>
+      </aside>
       <footer class="container">
         <div>
           <strong>${text(profile.name)}</strong>
           <p>Building, learning, and improving.</p>
         </div>
-        <span>${text(profile.location)}</span>
+        ${renderCommunityVisitors()}
       </footer>
-      ${photoDialog()}${renderCertificateDialog()}${skillPreviewDialog()}${spotifyDialog()}${chatWidget()}`;
+      ${photoDialog()}${renderCertificateDialog()}${skillPreviewDialog()}${spotifyDialog()}${chatWidget()}${renderFeedbackDialog()}`;
   document.title = `${path === '/' ? profile.name : path.slice(1).replace(/^./, (first) => first.toUpperCase()) + ' | ' + profile.name} — Portfolio`;
 }
 
@@ -835,7 +853,13 @@ let stopResume;
 let stopDock;
 let stopName;
 let stopStars;
+let stopSectionTracker;
+let stopTyping;
+let community;
 function initializeMain({ pageEntry = false } = {}) {
+  stopTyping?.();
+  stopTyping = enableTextType();
+  stopSectionTracker?.();
   stopDock?.();
   stopName?.();
   stopStars?.();
@@ -881,12 +905,15 @@ function initializeMain({ pageEntry = false } = {}) {
   stopProfile = enableRobinerProfile();
   stopProjectDeck = enableRobinerProjectDeck();
   stopMotion = enableRobinerMotion({ pageEntry });
+  stopSectionTracker = enableSectionTracker();
+  community?.refreshRoute();
 }
 
 enableRobinerChat();
 enableCertificateViewer(award);
 enableRobinerSkillPreview(skillPreviews, skillIcons);
 initializeMain();
+community = enablePortfolioCommunity(communityConfig);
 enableRobinerNavigation({
   render: () => renderPage({ partial: true }),
   initialize: initializeMain,

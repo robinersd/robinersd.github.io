@@ -7,6 +7,11 @@
   },
   "scripts": {
     "dev": "node --watch --env-file-if-exists=site/.env.local server.mjs",
-    "start": "node --env-file-if-exists=site/.env.local server.mjs"
+    "start": "node --env-file-if-exists=site/.env.local server.mjs",
+    "typecheck:supabase": "tsc --project supabase/functions/tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/deno": "2.7.0",
+    "typescript": "7.0.2"
   }
 }

@@ -1,0 +1,321 @@
+:root.feedback-open {
+  overflow: hidden;
+}
+.community-panel {
+  margin: 18px 0 0;
+  padding: 18px 0 0;
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+}
+.community-avatar-stack {
+  display: flex;
+  padding-left: 5px;
+}
+.community-avatar {
+  display: block;
+  width: 30px;
+  height: 30px;
+  margin-left: -5px;
+  overflow: hidden;
+  border: 2px solid var(--background);
+  border-radius: 50%;
+  background: #fff;
+}
+.community-avatar svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.community-visit-pill {
+  border: 1px dashed var(--line);
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 12px;
+  max-width: 100%;
+  color: var(--accent);
+}
+.community-visit-pill strong {
+  font-weight: 600;
+}
+footer.container {
+  flex-wrap: wrap;
+  padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
+}
+.footer-visitors {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  min-height: 42px;
+}
+.footer-visitors .community-avatar {
+  width: 32px;
+  height: 32px;
+}
+.footer-visitors .community-visit-pill {
+  font-size: 11px;
+}
+@media (max-width: 600px) {
+  footer.container {
+    gap: 18px;
+  }
+  .footer-visitors {
+    max-width: calc(100vw - 200px);
+    gap: 6px;
+    min-height: 48px;
+  }
+  .footer-visitors .community-avatar {
+    width: 25px;
+    height: 25px;
+  }
+  .footer-visitors .community-visit-pill {
+    font-size: 11px;
+    padding: 4px 7px;
+  }
+}
+.community-viewing {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+}
+.community-viewing strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+.community-rating-summary {
+  display: grid;
+  gap: 2px;
+  font-size: 12px;
+}
+.community-rating-summary strong {
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 500;
+}
+.community-rating-summary span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.community-panel .community-feedback-open {
+  min-height: 44px;
+  padding: 6px 10px;
+  font-size: 13px;
+  width: 100%;
+  justify-content: center;
+}
+.community-inquiries {
+  margin: 6px 0 0;
+  min-width: 0;
+  max-width: 100%;
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.community-inquiries a {
+  color: var(--accent);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.community-email-icon {
+  display: inline-block;
+  margin-right: 5px;
+  vertical-align: -0.2em;
+}
+.community-live-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--muted);
+  margin-right: 1px;
+}
+.community-panel[data-live='true'] .community-live-dot {
+  background: var(--accent);
+}
+.community-feedback-open:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.feedback-dialog {
+  width: min(440px, calc(100% - 32px));
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--background);
+  color: var(--ink);
+  box-shadow: 0 24px 80px #0005;
+}
+.feedback-dialog::backdrop {
+  background: #0009;
+  backdrop-filter: blur(3px);
+}
+.feedback-dialog[open] {
+  animation: feedback-in 180ms ease-out;
+}
+.feedback-dialog .eyebrow {
+  padding-right: 20px;
+  font-size: 9px;
+}
+.feedback-dialog h2 {
+  margin: 8px 0;
+  font-size: 25px;
+  line-height: 1.2;
+  letter-spacing: -0.7px;
+}
+.feedback-dialog > p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+.feedback-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink);
+  font-size: 25px;
+  cursor: pointer;
+}
+.feedback-rating {
+  margin: 20px 0;
+  border: 0;
+  padding: 0;
+}
+.feedback-rating legend,
+.feedback-comment-label {
+  font-weight: 500;
+  font-size: 12px;
+}
+.feedback-stars {
+  display: flex;
+  width: fit-content;
+  gap: 4px;
+  margin-top: 8px;
+}
+.feedback-stars label {
+  display: grid;
+  place-items: center;
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--muted);
+}
+.feedback-stars svg {
+  width: 32px;
+  height: 32px;
+  fill: transparent;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  transition:
+    fill 140ms ease,
+    transform 140ms ease;
+}
+.feedback-stars [data-filled='true'] {
+  color: #a36b00;
+}
+:root[data-theme='dark'] .feedback-stars [data-filled='true'] {
+  color: #f4bf51;
+}
+.feedback-stars [data-filled='true'] svg {
+  fill: currentColor;
+}
+.feedback-stars label:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.feedback-stars label:active svg {
+  transform: scale(0.9);
+}
+.feedback-comment-label {
+  display: block;
+  margin-bottom: 7px;
+}
+.feedback-comment-label span {
+  color: var(--muted);
+  font-weight: 400;
+}
+.feedback-dialog textarea {
+  width: 100%;
+  min-height: 100px;
+  resize: vertical;
+  padding: 12px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+.feedback-dialog textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.feedback-private-note {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+.feedback-honeypot {
+  display: none;
+}
+.feedback-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+.feedback-actions .button,
+.feedback-thanks .button {
+  min-height: 42px;
+  font-size: 12px;
+}
+.feedback-submit:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.feedback-status {
+  min-height: 0;
+  margin-bottom: 0;
+}
+.feedback-status:empty {
+  display: none;
+}
+.feedback-thanks p {
+  margin-block: 24px;
+}
+@keyframes feedback-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (max-width: 600px) {
+  .feedback-dialog {
+    padding: 24px 20px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .feedback-dialog[open] {
+    animation: none;
+  }
+  .feedback-stars svg {
+    transition: none;
+  }
+}

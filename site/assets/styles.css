@@ -1,12 +1,15 @@
 :root {
   color-scheme: light;
-  --background: #fff;
-  --surface: #fafafa;
+  --background: #f0f2ed;
+  --surface: #f7f8f3;
   --ink: #192020;
-  --muted: #737b7b;
-  --line: #e7ebea;
-  --accent: #327569;
-  --tag: #f3f5f4;
+  --muted: #57645f;
+  --line: #d2dad2;
+  --accent: #286454;
+  --tag: #e1e8df;
+  --hint-background: #172020;
+  --hint-ink: #edf2f0;
+  --hint-border: #2a3532;
 }
 
 :root[data-theme='dark'] {
@@ -18,6 +21,9 @@
   --line: #2a3532;
   --accent: #8ccfbc;
   --tag: #202b27;
+  --hint-background: #edf2f0;
+  --hint-ink: #192020;
+  --hint-border: #d2dad2;
 }
 
 * {
@@ -356,6 +362,109 @@ section {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.spotify-instruction {
+  position: relative;
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--hint-border);
+  border-radius: 16px 16px 16px 4px;
+  background: var(--hint-background);
+  color: var(--hint-ink);
+  box-shadow: 0 4px 14px #00000012;
+  letter-spacing: 0.03em;
+  text-transform: none;
+}
+.spotify-instruction::after {
+  content: '';
+  position: absolute;
+  left: 14px;
+  bottom: -6px;
+  width: 10px;
+  height: 10px;
+  background: var(--hint-background);
+  border-right: 1px solid var(--hint-border);
+  border-bottom: 1px solid var(--hint-border);
+  transform: rotate(45deg);
+}
+@media (max-width: 760px) {
+  .spotify-instruction {
+    padding: 9px 10px;
+    border-radius: 12px 12px 12px 4px;
+  }
+}
+.text-type {
+  position: relative;
+  display: inline-block;
+  min-width: 0;
+  white-space: pre-wrap;
+}
+.text-type__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.text-type__measure {
+  visibility: hidden;
+}
+.text-type__content {
+  position: absolute;
+  inset: 0;
+}
+.text-type__caret {
+  display: inline-block;
+  width: 0;
+}
+.text-type__cursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  white-space: pre;
+  pointer-events: none;
+  color: currentColor;
+  transition: transform 120ms ease-out;
+}
+.text-type__blink {
+  display: inline-block;
+  animation: text-type-blink 1s ease-in-out infinite;
+}
+.text-type__shape {
+  display: inline-block;
+  margin-left: 0.06em;
+  background-color: currentColor;
+  width: 0.56em;
+  height: max(2px, 0.075em);
+  vertical-align: -0.12em;
+  border-radius: 1px;
+}
+.text-type--paused .text-type__blink {
+  animation-play-state: paused;
+}
+@keyframes text-type-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .text-type__cursor {
+    transition: none;
+  }
+  .text-type__blink {
+    animation: none;
+  }
 }
 
 .status-dot {
@@ -2032,9 +2141,9 @@ button:not(.profile-portrait):not(.skill-badge):active {
 
 /* Project-specific colors track the current light or dark theme. */
 :root {
-  --project-background: #ffffff;
+  --project-background: #f7f8f3;
   --project-border: #cad5d2;
-  --project-preview: #f1f4f3;
+  --project-preview: #e7ede5;
   --project-role: #286452;
   --project-summary: #536772;
   --project-muted: #687980;
