@@ -126,7 +126,7 @@ test('phone deck retains rotation and keyboard selection; desktop shows every ca
   win.matchMedia = () => desktop;
   const api = await load(
     'project-deck.js',
-    { document: doc, window: win, AbortController },
+    { document: doc, window: win, AbortController, performance },
     'enableRobinerProjectDeck',
   );
   const stop = api.enableRobinerProjectDeck();
@@ -189,7 +189,7 @@ test('phone deck retains rotation and keyboard selection; desktop shows every ca
   );
 });
 
-test('whole web project cards keep native click and Enter navigation on desktop and phone', async () => {
+test('web project cards open with one desktop click or two phone taps and retain keyboard links', async () => {
   for (const isDesktop of [false, true]) {
     const shell = new Element(),
       grid = new Element(),
@@ -211,15 +211,34 @@ test('whole web project cards keep native click and Enter navigation on desktop 
     win.matchMedia = () => desktop;
     const api = await load(
       'project-deck.js',
-      { document: doc, window: win, AbortController },
+      { document: doc, window: win, AbortController, performance },
       'enableRobinerProjectDeck',
     );
     const stop = api.enableRobinerProjectDeck();
     for (let index = 0; index < 2; index++) {
       const click = await cards[index].emit('click', { button: 0 });
-      assert.equal(click.defaultPrevented, false, 'A rear linked card opens on the first tap');
+      assert.equal(
+        click.defaultPrevented,
+        !isDesktop,
+        'Phone first tap selects; desktop opens immediately',
+      );
+      if (!isDesktop) {
+        assert.equal(cards[index].dataset.deckSlot, 'center');
+        const second = await cards[index].emit('click', { button: 0 });
+        assert.equal(
+          second.defaultPrevented,
+          false,
+          'Second phone tap keeps native target-blank navigation',
+        );
+      }
       const enter = await cards[index].emit('keydown', { key: 'Enter' });
       assert.equal(enter.defaultPrevented, false, 'Native keyboard navigation is preserved');
+      const keyboardClick = await cards[index].emit('click', { button: 0, detail: 0 });
+      assert.equal(
+        keyboardClick.defaultPrevented,
+        false,
+        'Enter must not require a second activation',
+      );
       assert.equal(cards[index].getAttribute('href'), projects[index].url);
       assert.equal(
         cards[index].getAttribute('role'),
@@ -233,6 +252,130 @@ test('whole web project cards keep native click and Enter navigation on desktop 
     stop();
     assert.equal(cards[0].getAttribute('aria-label'), `${projects[0].name} website`);
   }
+});
+
+async function swipeDeck(isDesktop = false) {
+  const shell = new Element(),
+    grid = new Element(),
+    doc = new Element(),
+    win = new Element();
+  const cards = projects.map((project) => {
+    const card = new Element();
+    card.nodes = new Map([['h3', { textContent: project.name }]]);
+    if (project.url) card.setAttribute('href', project.url);
+    return card;
+  });
+  shell.nodes = new Map([['.project-grid', grid]]);
+  grid.querySelectorAll = () => cards;
+  doc.querySelectorAll = () => [shell];
+  const desktop = Object.assign(new Element(), { matches: isDesktop });
+  win.matchMedia = () => desktop;
+  let now = 1000;
+  const api = await load(
+    'project-deck.js',
+    {
+      document: doc,
+      window: win,
+      AbortController,
+      performance: { now: () => now },
+    },
+    'enableRobinerProjectDeck',
+  );
+  const stop = api.enableRobinerProjectDeck();
+  const pointer = { pointerId: 1, pointerType: 'touch', isPrimary: true, button: 0 };
+  return {
+    cards,
+    grid,
+    doc,
+    win,
+    desktop,
+    stop,
+    pointer,
+    advance: (ms) => {
+      now += ms;
+    },
+    async swipe(dx, dy = 0, pointerType = 'touch') {
+      const event = { ...pointer, pointerType };
+      await grid.emit('pointerdown', { ...event, clientX: 150, clientY: 100 });
+      const move = await grid.emit('pointermove', {
+        ...event,
+        clientX: 150 + dx,
+        clientY: 100 + dy,
+      });
+      await doc.emit('pointerup', { ...event, clientX: 150 + dx, clientY: 100 + dy });
+      return move;
+    },
+  };
+}
+
+test('phone swipes cycle all three cards in either direction and suppress the resulting link click', async () => {
+  const h = await swipeDeck();
+  assert.equal((await h.swipe(-80)).defaultPrevented, true);
+  assert.equal(h.cards[2].dataset.deckSlot, 'center', 'Left swipe brings the right card forward');
+  assert.equal((await h.cards[2].emit('click', { button: 0 })).defaultPrevented, true);
+  await h.swipe(-80);
+  assert.equal(h.cards[1].dataset.deckSlot, 'center');
+  await h.swipe(-80);
+  assert.equal(
+    h.cards[0].dataset.deckSlot,
+    'center',
+    'Repeated swipes cycle rather than alternate two cards',
+  );
+  await h.swipe(80);
+  assert.equal(h.cards[1].dataset.deckSlot, 'center');
+  await h.grid.emit('pointerdown', { ...h.pointer, clientX: 100, clientY: 100 });
+  await h.doc.emit('pointerup', { ...h.pointer, clientX: 100, clientY: 100 });
+  assert.equal((await h.cards[1].emit('click', { button: 0 })).defaultPrevented, true);
+  h.advance(200);
+  assert.equal((await h.cards[1].emit('click', { button: 0 })).defaultPrevented, false);
+  const previous = h.cards.map((card) => card.dataset.deckSlot);
+  h.stop();
+  await h.swipe(-80);
+  assert.equal(
+    h.cards.every((card) => card.dataset.deckSlot === undefined),
+    true,
+  );
+  assert.equal(previous.filter((slot) => slot === 'center').length, 1);
+});
+
+test('scrolling, short drags, multi-touch and desktop drags never rotate or activate a project', async () => {
+  const h = await swipeDeck();
+  assert.equal((await h.swipe(8, 90)).defaultPrevented, false, 'Vertical scrolling remains native');
+  assert.equal(h.cards[0].dataset.deckSlot, 'center');
+  await h.swipe(-25);
+  assert.equal(h.cards[0].dataset.deckSlot, 'center', 'Short drags do not swap');
+  await h.swipe(-80, 0, 'mouse');
+  assert.equal(h.cards[0].dataset.deckSlot, 'center', 'Mouse drags do not enable phone swipes');
+  await h.grid.emit('pointerdown', { ...h.pointer, clientX: 150, clientY: 100 });
+  await h.grid.emit('pointerdown', {
+    ...h.pointer,
+    pointerId: 2,
+    isPrimary: false,
+    clientX: 150,
+    clientY: 100,
+  });
+  await h.doc.emit('pointerup', { ...h.pointer, clientX: 50, clientY: 100 });
+  assert.equal(h.cards[0].dataset.deckSlot, 'center');
+  await h.doc.emit('pointercancel', h.pointer);
+  assert.equal((await h.cards[0].emit('click', { button: 0 })).defaultPrevented, true);
+  h.stop();
+  const desktop = await swipeDeck(true);
+  assert.equal((await desktop.swipe(-80)).defaultPrevented, false);
+  assert.equal((await desktop.cards[0].emit('click', { button: 0 })).defaultPrevented, false);
+  desktop.stop();
+});
+
+test('phone double taps expire and never combine taps on different cards', async () => {
+  const h = await swipeDeck();
+  assert.equal((await h.cards[0].emit('click', { button: 0 })).defaultPrevented, true);
+  h.advance(500);
+  assert.equal((await h.cards[0].emit('click', { button: 0 })).defaultPrevented, true);
+  h.advance(100);
+  assert.equal((await h.cards[1].emit('click', { button: 0 })).defaultPrevented, true);
+  assert.equal(h.cards[1].dataset.deckSlot, 'center');
+  h.advance(100);
+  assert.equal((await h.cards[1].emit('click', { button: 0 })).defaultPrevented, false);
+  h.stop();
 });
 
 test('gallery removes thumbnails while retaining its bounded region', () => {

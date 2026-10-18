@@ -20,9 +20,9 @@ import {
   spotifyPlaylists,
   spotifyQueue,
   skillPreviews,
-} from './data.js?v=name-menu-88';
+} from './data.js?v=display-name-92';
 import { enableRobinerMotion } from './motion.js?v=chat-56';
-import { enableRobinerProjectDeck } from './project-deck.js?v=card-viewers-60';
+import { enableRobinerProjectDeck } from './project-deck.js?v=project-swipe-90';
 import { enableRobinerProfile } from './profile.js?v=profile-cutout-65';
 import { enableRobinerNavigation, basePath } from './navigation.js?v=v2-fix';
 import { renderPixelGallery, enablePixelGallery } from './pixel-gallery.js?v=chat-56';
@@ -221,7 +221,7 @@ function projectCard(project) {
       </div>
     </div>
     <div class="project-card-footer">
-      ${project.url ? '<span class="project-visit text-link">Visit site <span aria-hidden="true">↗</span></span>' : '<span class="project-note">Academic project</span>'}
+      ${project.url ? '<span class="project-visit text-link"><span class="project-visit-desktop">Visit site</span><span class="project-visit-phone">Double tap to visit</span> <span aria-hidden="true">↗</span></span>' : '<span class="project-note">Academic project</span>'}
     </div>
   </${cardTag}>`;
 }

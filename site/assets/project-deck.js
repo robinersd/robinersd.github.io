@@ -20,6 +20,9 @@ export function enableRobinerProjectDeck() {
     );
     const slots = ['center', 'left', 'right'];
     let selected = 0;
+    let lastTap = null;
+    let gesture = null;
+    let blockClickUntil = 0;
 
     function paint() {
       grid.classList.remove(desktop.matches ? 'project-deck' : 'project-desktop');
@@ -48,6 +51,7 @@ export function enableRobinerProjectDeck() {
     }
     function select(index, focus = false) {
       if (index !== selected) {
+        lastTap = null;
         [slots[selected], slots[index]] = [slots[index], slots[selected]];
         selected = index;
         paint();
@@ -63,6 +67,12 @@ export function enableRobinerProjectDeck() {
         'click',
         (event) => {
           if (desktop.matches) return;
+          // Keyboard-generated clicks retain native link activation.
+          if (event.detail === 0 && isSiteLink[index]) return;
+          if (performance.now() < blockClickUntil) {
+            event.preventDefault();
+            return;
+          }
           if (
             event.button !== 0 ||
             event.metaKey ||
@@ -71,12 +81,19 @@ export function enableRobinerProjectDeck() {
             event.altKey
           )
             return;
-          if (index !== selected) {
-            // Native linked cards open from any point, including rear cards.
-            // The hardware card still selects without navigating.
-            if (!isSiteLink[index]) event.preventDefault();
-            select(index);
+          const now = performance.now();
+          if (
+            isSiteLink[index] &&
+            index === selected &&
+            lastTap?.index === index &&
+            now - lastTap.time <= 450
+          ) {
+            lastTap = null;
+            return;
           }
+          event.preventDefault();
+          select(index);
+          lastTap = isSiteLink[index] ? { index, time: now } : null;
         },
         options,
       );
@@ -99,11 +116,79 @@ export function enableRobinerProjectDeck() {
         { ...options, passive: true },
       );
     });
+    function rotate(direction) {
+      const next =
+        direction === 'left'
+          ? { center: 'left', left: 'right', right: 'center' }
+          : { center: 'right', right: 'left', left: 'center' };
+      slots.forEach((slot, index) => {
+        slots[index] = next[slot];
+      });
+      selected = slots.indexOf('center');
+      lastTap = null;
+      paint();
+    }
+    function cancelGesture() {
+      if (gesture) blockClickUntil = performance.now() + 500;
+      gesture = null;
+      lastTap = null;
+    }
+    grid.addEventListener(
+      'pointerdown',
+      (event) => {
+        if (desktop.matches || event.pointerType !== 'touch') return;
+        if (event.isPrimary === false) {
+          cancelGesture();
+          return;
+        }
+        blockClickUntil = 0;
+        gesture = { id: event.pointerId, x: event.clientX, y: event.clientY, horizontal: false };
+      },
+      { ...options, passive: true },
+    );
+    grid.addEventListener(
+      'pointermove',
+      (event) => {
+        if (!gesture || event.pointerId !== gesture.id) return;
+        const dx = event.clientX - gesture.x;
+        const dy = event.clientY - gesture.y;
+        if (!gesture.horizontal && Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) {
+          cancelGesture();
+          return;
+        }
+        if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.25) {
+          gesture.horizontal = true;
+          lastTap = null;
+          if (event.cancelable) event.preventDefault();
+          if (!grid.hasPointerCapture?.(event.pointerId)) grid.setPointerCapture?.(event.pointerId);
+        }
+      },
+      options,
+    );
+    document.addEventListener(
+      'pointerup',
+      (event) => {
+        if (!gesture || event.pointerId !== gesture.id) return;
+        const dx = event.clientX - gesture.x;
+        const dy = event.clientY - gesture.y;
+        const moved = Math.max(Math.abs(dx), Math.abs(dy)) > 12;
+        gesture = null;
+        if (moved) {
+          blockClickUntil = performance.now() + 500;
+          lastTap = null;
+        }
+        if (!desktop.matches && Math.abs(dx) >= 44 && Math.abs(dx) > Math.abs(dy) * 1.25)
+          rotate(dx < 0 ? 'left' : 'right');
+      },
+      { ...options, passive: true },
+    );
+    document.addEventListener('pointercancel', cancelGesture, { ...options, passive: true });
     shell.addEventListener(
       'keydown',
       (event) => {
         if (desktop.matches) return;
         if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        lastTap = null;
         event.preventDefault();
         const index =
           event.key === 'Home'
@@ -121,9 +206,19 @@ export function enableRobinerProjectDeck() {
     document.addEventListener('pointerup', release, { ...options, passive: true });
     document.addEventListener('pointercancel', release, { ...options, passive: true });
     window.addEventListener('scroll', release, { ...options, passive: true });
+    window.addEventListener('scroll', cancelGesture, { ...options, passive: true });
     window.addEventListener('blur', release, options);
+    window.addEventListener('blur', cancelGesture, options);
     paint();
-    desktop.addEventListener('change', paint, options);
+    desktop.addEventListener(
+      'change',
+      () => {
+        cancelGesture();
+        blockClickUntil = 0;
+        paint();
+      },
+      options,
+    );
     restore.push(() => {
       grid.classList.remove('project-deck');
       grid.classList.remove('project-desktop');

@@ -1,6 +1,6 @@
 // Edit this file to update your portfolio. No build step is required.
 export const profile = {
-  name: 'Dahap, Robiner B.',
+  name: 'Robiner Dahap',
   initials: 'RBD',
   title: 'Computer Engineering Student · Full-Stack Developer',
   location: 'Antipolo City, Philippines',

@@ -4,10 +4,11 @@ Responsive personal portfolio showcasing software projects, skills, education, r
 
 ## Features
 
-- Profile name displayed as **Dahap, Robiner B.**
+- Profile name displayed as **Robiner Dahap** with a blue profile badge.
 - Spotify instruction with a typing animation, underscore cursor, and message bubble.
 - Contrasting message bubble: light in dark mode and dark in light mode.
 - Responsive profile artwork, interactive project cards, skill previews, and certificate viewer.
+- Open project live sites with a single desktop click or a double tap on phones. Swipe left or right through projects on phones.
 - Right-side page menu with clean text links and the current section highlighted while scrolling. It starts open on desktop and closed on phones.
 - Total visits, current viewers, and a public average star rating powered by Supabase. Written feedback stays private.
 - Work-inquiry email link with an envelope icon below the feedback button.
