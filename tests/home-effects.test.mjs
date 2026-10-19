@@ -4,6 +4,8 @@ import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import { chatIntro, chatFarewell, resumeClue } from '../site/assets/data.js';
 import { isResumeActivation, isResumeActivationQuestion } from '../site/assets/resume-command.js';
+import { getPortfolioAnswer, portfolioUnavailableReply } from '../site/assets/portfolio-answers.js';
+import { isCasualChat } from '../site/assets/chat-intent.js';
 
 class Element extends EventTarget {
   constructor(tag = 'div') {
@@ -333,6 +335,9 @@ test('custom intro/follow-up never sends a clue without a resume activation ques
       createVoicePlayer: () => new Element(),
       chatIntro,
       chatFarewell,
+      getPortfolioAnswer,
+      portfolioUnavailableReply,
+      isCasualChat,
       resumeClue,
       isResumeActivation,
       isResumeActivationQuestion,
@@ -344,9 +349,9 @@ test('custom intro/follow-up never sends a clue without a resume activation ques
         if (delay === 3000) callback();
         return 1;
       },
-      async fetch(url, options) {
-        requests.push(JSON.parse(options.body));
-        return { ok: true, json: async () => ({ reply: 'Project answer' }) };
+      async requestChatReply(messages, attachments) {
+        requests.push({ messages, attachments });
+        return { reply: 'Project answer' };
       },
     },
     'enableRobinerChat',
@@ -364,15 +369,36 @@ test('custom intro/follow-up never sends a clue without a resume activation ques
   await nodes.get('form').emit('submit');
   assert.equal(log.children.at(-1).textContent, chatFarewell);
   assert.equal(requests.length, 0);
-  nodes.get('#robiner-chat-input').value = 'What projects does Robiner have?';
+  nodes.get('#robiner-chat-input').value = 'Explain a coding concept';
   await nodes.get('form').emit('submit');
   assert.equal(log.children.at(-1).textContent, 'Project answer');
   assert.equal(requests.length, 1);
+  await nodes.get('.chat-reset').emit('click');
+  nodes.get('#robiner-chat-input').value = 'Explain a coding concept';
+  await nodes.get('form').emit('submit');
+  assert.equal(log.children.at(-1).textContent, 'Project answer');
+  assert.equal(requests.length, 2, 'Any non-casual question goes to AI immediately on a new chat');
+  assert.equal(log.textContent.includes(chatIntro[0]), false);
+  await nodes.get('.chat-reset').emit('click');
+  nodes.get('#robiner-chat-input').value = 'Hi';
+  await nodes.get('form').emit('submit');
+  nodes.get('#robiner-chat-input').value = 'What are Robiner’s skills?';
+  await nodes.get('form').emit('submit');
+  assert.match(log.children.at(-1).textContent, /TypeScript/);
+  assert.equal(
+    log.textContent.includes(chatFarewell),
+    false,
+    'A real question after a greeting never receives the scripted farewell',
+  );
+  nodes.get('#robiner-chat-input').value = 'Tell me about AlagaTrack';
+  await nodes.get('form').emit('submit');
+  assert.match(log.children.at(-1).textContent, /Community Health Worker/);
+  assert.equal(requests.length, 2);
   assert.equal(JSON.stringify(requests[0]).includes(chatFarewell), false);
   nodes.get('#robiner-chat-input').value = 'paano i-activate ang resume?';
   await nodes.get('form').emit('submit');
   assert.equal(log.children.at(-1).textContent, resumeClue);
-  assert.equal(requests.length, 1);
+  assert.equal(requests.length, 2);
   assert.equal(activations, 0);
   nodes.get('#robiner-chat-input').value = 'activate the resume';
   await nodes.get('form').emit('submit');
@@ -388,4 +414,31 @@ test('custom intro/follow-up never sends a clue without a resume activation ques
   await nodes.get('form').emit('submit');
   assert.equal(log.children.at(-1).textContent, resumeClue);
   assert.equal(activations, 1, 'help alone does not activate anything');
+  await nodes.get('.chat-reset').emit('click');
+  nodes.get('#robiner-chat-input').value = 'What are Robiner’s skills?';
+  await nodes.get('form').emit('submit');
+  assert.match(log.children.at(-1).textContent, /TypeScript/);
+  assert.match(log.children.at(-1).textContent, /React/);
+  assert.equal(requests.length, 2, 'Known resume answers need no API, even as the first question');
+  assert.equal(log.textContent.includes(chatFarewell), false);
+  nodes.get('#robiner-chat-input').value = 'Tell me about AlagaTrack';
+  await nodes.get('form').emit('submit');
+  assert.match(log.children.at(-1).textContent, /Community Health Worker/);
+  assert.match(log.children.at(-1).textContent, /Aug 2025/);
+  assert.equal(requests.length, 2);
+  nodes.get('#robiner-chat-input').value = 'single ka ba?';
+  await nodes.get('form').emit('submit');
+  assert.equal(
+    log.children.at(-1).textContent,
+    chatIntro[2],
+    'Casual chat can start after professional questions',
+  );
+  nodes.get('#robiner-chat-input').value = 'What education does Robiner have?';
+  await nodes.get('form').emit('submit');
+  assert.match(log.children.at(-1).textContent, /ICCT Colleges/);
+  assert.equal(log.textContent.includes(chatFarewell), false);
+  await nodes.get('.chat-reset').emit('click');
+  nodes.get('#robiner-chat-input').value = 'taga saan';
+  await nodes.get('form').emit('submit');
+  assert.equal(log.children.at(-1).textContent, chatIntro[2]);
 });

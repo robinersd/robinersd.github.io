@@ -1,7 +1,7 @@
 import { enableRobinerSkillPreview } from './skill-preview.js?v=chat-56';
 import { enableRobinerTheme } from './theme.js?v=theme-queue-62';
 import { renderStaggeredSkills, enableStaggeredSkills } from './staggered-skills.js?v=chat-56';
-import { enableRobinerChat } from './chat.js?v=chat-56';
+import { enableRobinerChat } from './chat.js?v=chat-intent-95';
 import { enableSocialDock } from './social-dock.js?v=chat-56';
 import { enableEncryptedName } from './encrypted-name.js?v=chat-56';
 import { renderHomeStars, enableHomeStars } from './home-stars.js?v=chat-56';
@@ -20,7 +20,7 @@ import {
   spotifyPlaylists,
   spotifyQueue,
   skillPreviews,
-} from './data.js?v=display-name-92';
+} from './data.js?v=chat-intent-95';
 import { enableRobinerMotion } from './motion.js?v=chat-56';
 import { enableRobinerProjectDeck } from './project-deck.js?v=project-swipe-90';
 import { enableRobinerProfile } from './profile.js?v=profile-cutout-65';

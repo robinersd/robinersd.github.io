@@ -13,6 +13,9 @@ Responsive personal portfolio showcasing software projects, skills, education, r
 - Total visits, current viewers, and a public average star rating powered by Supabase. Written feedback stays private.
 - Work-inquiry email link with an envelope icon below the feedback button.
 - Floating portfolio assistant with a dedicated sidebar dock to keep contact details clear.
+- Portfolio and resume questions use shared public facts for skills, projects, education, awards and contact details, including on static hosting. General AI and attachment analysis require a connected AI service.
+- Portfolio questions are answered from the first message. The playful custom chat is reserved for casual messages such as greetings and small talk.
+- GitHub Pages forwards general AI requests to the portfolio's Vercel backend. Non-JSON backend failures display a readable message instead of a parsing error.
 - Remembered theme preference, keyboard navigation, and reduced-motion support.
 
 ## Technology

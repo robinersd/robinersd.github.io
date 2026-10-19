@@ -1,5 +1,6 @@
 import { profile, projects, education, award, chatKnowledge, resumeClue } from '../assets/data.js';
 import { isResumeActivation, isResumeActivationQuestion } from '../assets/resume-command.js';
+import { getPortfolioAnswer, portfolioUnavailableReply } from '../assets/portfolio-answers.js';
 
 const MAX_ATTACHMENT_BYTES = 1024 * 1024;
 
@@ -94,19 +95,28 @@ export function withAttachments(messages, attachments) {
 // This module runs on the server. The API key is never sent to the browser.
 export default async function robinerChat(request, response) {
   response.setHeader('Cache-Control', 'no-store');
-  if (request.method !== 'POST') {
-    response.setHeader('Allow', 'POST');
-    return response.status(405).json({ error: 'Use POST to send a message.' });
-  }
+  response.setHeader('Vary', 'Origin');
   const origin = request.headers.origin;
   const host = request.headers['x-forwarded-host'] || request.headers.host;
-  if (origin && host) {
+  const trustedOrigins = new Set(['https://robinersd.github.io', 'https://robinersd.vercel.app']);
+  if (origin) {
     try {
-      if (new URL(origin).host !== host)
+      const url = new URL(origin);
+      if (url.origin !== origin || (!trustedOrigins.has(origin) && (!host || url.host !== host)))
         return response.status(403).json({ error: 'This request is not allowed.' });
     } catch {
       return response.status(403).json({ error: 'This request is not allowed.' });
     }
+    response.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  if (request.method === 'OPTIONS') {
+    response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
+    return response.status(204).end();
+  }
+  if (request.method !== 'POST') {
+    response.setHeader('Allow', 'POST, OPTIONS');
+    return response.status(405).json({ error: 'Use POST to send a message.' });
   }
   const messages = request.body?.messages;
   if (
@@ -140,10 +150,15 @@ export default async function robinerChat(request, response) {
   if (!attachments.length && isResumeActivationQuestion(messages.at(-1).content)) {
     return response.status(200).json({ reply: resumeClue });
   }
+  const publicAnswer = !attachments.length
+    ? getPortfolioAnswer(messages.at(-1).content, { history: messages.slice(0, -1) })
+    : null;
   if (!process.env.XKIRO_API_KEY) {
+    if (!attachments.length)
+      return response.status(200).json({ reply: publicAnswer || portfolioUnavailableReply });
     return response.status(503).json({
       error:
-        'The AI assistant is not connected yet. You can reach Robiner at dahaprobiner@gmail.com.',
+        'Photo and voice analysis needs a connected AI service. You can still ask about Robiner’s published skills, projects, education and contact information.',
     });
   }
   const resumeGuidance =
@@ -185,6 +200,7 @@ export default async function robinerChat(request, response) {
       }),
       signal: AbortSignal.timeout(40000),
     });
+    if (!result.ok && publicAnswer) return response.status(200).json({ reply: publicAnswer });
     if (result.status === 429)
       return response.status(429).json({ error: 'The assistant is busy. Please try again later.' });
     if (!result.ok)
@@ -206,6 +222,7 @@ export default async function robinerChat(request, response) {
     }
     return response.status(200).json({ reply });
   } catch {
+    if (publicAnswer) return response.status(200).json({ reply: publicAnswer });
     return response.status(502).json({
       error: 'The assistant is unavailable right now. Please try again later.',
     });

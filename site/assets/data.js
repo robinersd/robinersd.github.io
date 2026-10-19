@@ -270,6 +270,17 @@ export const chatKnowledge = {
     'Basic Circuit Design',
     'System Analysis & Design',
   ],
+  projectResponsibilities: {
+    streetwear: [
+      'Built a custom web application around client requirements, responsive interfaces and integrated database features.',
+      'Handled testing, debugging and deployment using Vercel, Git and GitHub.',
+    ],
+    medicare: [
+      'Prepared technical documentation, research reports and system requirements.',
+      'Documented system architecture, hardware components, process-flow diagrams and technical specifications.',
+      'Collaborated with the team to gather technical information and verify documentation accuracy.',
+    ],
+  },
   webProjectStack: [...webProjectStack],
   webProjectDatabase: 'PostgreSQL via Supabase',
   webProjectNotes:

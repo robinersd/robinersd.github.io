@@ -1,4 +1,10 @@
-import { chatIntro, chatFarewell, resumeClue } from './data.js?v=chat-56';
+import { chatIntro, chatFarewell, resumeClue } from './data.js?v=chat-intent-95';
+import { requestChatReply } from './chat-api.js?v=chat-intent-95';
+import { isCasualChat } from './chat-intent.js?v=chat-intent-95';
+import {
+  getPortfolioAnswer,
+  portfolioUnavailableReply,
+} from './portfolio-answers.js?v=chat-intent-95';
 import { isResumeActivation, isResumeActivationQuestion } from './resume-command.js?v=chat-56';
 import { activateResume } from './resume.js?v=chat-56';
 import { enableChatAttachments, createVoicePlayer } from './chat-media.js?v=structure-40';
@@ -23,12 +29,12 @@ export function enableRobinerChat() {
   const greeting = greetingNode.textContent.replace(/\s+/g, ' ').trim();
   greetingNode.textContent = greeting;
   const history = [];
-  panel.dataset.chatVersion = 'chat-56';
+  panel.dataset.chatVersion = 'chat-intent-95';
   panel.dataset.chatPhase = 'intro-ready';
   let pending = false;
   let finishing = false;
   let introShown = false;
-  let introFollowUpPending = false;
+  let customIntroShown = false;
   let selection = { start: 0, end: 0 };
   let media;
 
@@ -157,7 +163,7 @@ export function enableRobinerChat() {
     history.length = 0;
     media.clear();
     introShown = false;
-    introFollowUpPending = false;
+    customIntroShown = false;
     panel.dataset.chatPhase = 'intro-ready';
     log.querySelectorAll('audio').forEach((audio) => audio.pause());
     log.replaceChildren();
@@ -226,7 +232,6 @@ export function enableRobinerChat() {
         link.textContent = 'View resume';
         reply.append(link);
         introShown = true;
-        introFollowUpPending = false;
         return;
       }
       if (!attachments.length && isResumeActivationQuestion(content)) {
@@ -235,10 +240,22 @@ export function enableRobinerChat() {
         await wait(introDelay);
         message('assistant', resumeClue);
         introShown = true;
-        introFollowUpPending = false;
         return;
       }
-      if (!introShown && !attachments.length && !isResumeActivation(content)) {
+      const casual = !attachments.length && isCasualChat(content);
+      const publicAnswer =
+        !attachments.length && !casual ? getPortfolioAnswer(content, { history }) : null;
+      if (publicAnswer) {
+        introShown = true;
+        history.push(
+          { role: 'user', content },
+          { role: 'assistant', content: publicAnswer.slice(0, 1500) },
+        );
+        history.splice(0, Math.max(0, history.length - 6));
+        message('assistant', publicAnswer);
+        return;
+      }
+      if (casual && !customIntroShown) {
         panel.dataset.chatPhase = 'intro-thinking';
         for (const reply of chatIntro) {
           status.textContent = 'Thinking…';
@@ -246,40 +263,29 @@ export function enableRobinerChat() {
           message('assistant', reply);
         }
         introShown = true;
-        introFollowUpPending = true;
+        customIntroShown = true;
         panel.dataset.chatPhase = 'awaiting-question';
         // Wait for another visitor message; never automatically call the AI here.
         return;
       }
-      if (introFollowUpPending && !attachments.length) {
+      if (casual && customIntroShown) {
         panel.dataset.chatPhase = 'farewell-thinking';
         status.textContent = 'Thinking…';
         await wait(introDelay);
         message('assistant', chatFarewell);
-        introFollowUpPending = false;
         return;
       }
       introShown = true;
-      introFollowUpPending = false;
       panel.dataset.chatPhase = 'answer-thinking';
       status.textContent = attachments.length ? 'Analyzing your attachment…' : 'Thinking…';
       const controller = new AbortController();
       timeout = setTimeout(() => controller.abort(), 45000);
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        // Scripted intro/follow-up messages stay out of AI context.
-        body: JSON.stringify({
-          messages: [...history.slice(-6), { role: 'user', content: prompt }],
-          attachments,
-        }),
-        signal: controller.signal,
-      });
-      const data = await response.json();
-      if (!response.ok || typeof data.reply !== 'string')
-        throw new Error(
-          data.error || 'The assistant is unavailable right now. Please contact Robiner by email.',
-        );
+      // Scripted intro/follow-up messages stay out of AI context.
+      const data = await requestChatReply(
+        [...history.slice(-6), { role: 'user', content: prompt }],
+        attachments,
+        { signal: controller.signal },
+      );
       const delivery = sentMessage.querySelector('.chat-message-delivery');
       if (delivery) delivery.textContent = 'Sent';
       // Keep text summaries in context, not repeated large media blobs.
@@ -303,7 +309,9 @@ export function enableRobinerChat() {
         'assistant',
         ['AbortError', 'TimeoutError'].includes(error.name)
           ? 'That took too long. Please try again in a moment.'
-          : error.message,
+          : attachments.length
+            ? error.message
+            : portfolioUnavailableReply,
       );
     } finally {
       clearTimeout(timeout);
