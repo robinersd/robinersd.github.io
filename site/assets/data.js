@@ -2,7 +2,7 @@
 export const profile = {
   name: 'Robiner Dahap',
   initials: 'RBD',
-  title: 'Computer Engineering Student · Full-Stack Developer',
+  title: 'Computer Engineering Student',
   location: 'Antipolo City, Philippines',
   email: 'dahaprobiner@gmail.com',
   github: 'https://github.com/robinersd',
@@ -21,7 +21,7 @@ export const profile = {
   },
   resume: '/resume',
   introduction:
-    'I build web applications and document the systems behind them. I’m a Computer Engineering student at ICCT with hands-on project work in full-stack development, embedded systems, and system analysis.',
+    'I build web applications and document the systems behind them. I’m a Computer Engineering student at ICCT with project work in full-stack development, embedded systems, and system analysis.',
   about:
     'My work brings together responsive interfaces, database integration, and clear technical documentation. I enjoy collaborating on academic and community-focused projects, turning requirements into practical software, and continuing to learn along the way.',
   skills: [

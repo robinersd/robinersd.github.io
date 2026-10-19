@@ -20,7 +20,7 @@ import {
   spotifyPlaylists,
   spotifyQueue,
   skillPreviews,
-} from './data.js?v=chat-intent-95';
+} from './data.js?v=profile-copy-96';
 import { enableRobinerMotion } from './motion.js?v=chat-56';
 import { enableRobinerProjectDeck } from './project-deck.js?v=project-swipe-90';
 import { enableRobinerProfile } from './profile.js?v=profile-cutout-65';
