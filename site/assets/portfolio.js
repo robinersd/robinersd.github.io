@@ -4,7 +4,12 @@ import { renderStaggeredSkills, enableStaggeredSkills } from './staggered-skills
 import { enableRobinerChat } from './chat.js?v=chat-delay-97';
 import { enableSocialDock } from './social-dock.js?v=chat-56';
 import { enableEncryptedName } from './encrypted-name.js?v=chat-56';
-import { renderHomeStars, enableHomeStars } from './home-stars.js?v=chat-56';
+import {
+  renderHomeStars,
+  enableHomeStars,
+  renderSidebarStars,
+  enableSidebarStars,
+} from './home-stars.js?v=stars-sidebar-1';
 import { renderResumeGate, enableResumeGate } from './resume.js?v=chat-56';
 import {
   renderCertificateDialog,
@@ -783,6 +788,7 @@ function renderPage({ partial = false } = {}) {
         aria-label="Page menu and visitors"
         hidden
       >
+        ${renderSidebarStars()}
         <button
           type="button"
           id="sidebar-phone-close"
@@ -866,6 +872,7 @@ let stopResume;
 let stopDock;
 let stopName;
 let stopStars;
+let stopSidebarStars;
 let stopSectionTracker;
 let stopTyping;
 let community;
@@ -876,12 +883,14 @@ function initializeMain({ pageEntry = false } = {}) {
   stopDock?.();
   stopName?.();
   stopStars?.();
+  stopSidebarStars?.();
   document
     .querySelector('#main')
     .classList.toggle('home-has-stars', Boolean(document.querySelector('[data-home-stars]')));
   stopDock = enableSocialDock();
   stopName = enableEncryptedName();
   stopStars = enableHomeStars();
+  stopSidebarStars = enableSidebarStars();
   stopResume?.();
   stopResume = enableResumeGate();
   stopMotion?.();

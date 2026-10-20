@@ -1213,9 +1213,10 @@ html.photo-viewer-open {
     max-width: 100%;
   }
   footer {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
   }
 }
 

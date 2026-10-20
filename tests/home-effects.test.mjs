@@ -283,6 +283,61 @@ test('stars are bounded on phones and stop after visibility/navigation changes',
   assert.equal(clock.tasks.size, 0);
 });
 
+test('sidebar stars render and clean up on navigation or visibility changes', async () => {
+  const canvas = new Element();
+  let dots = 0;
+  const context = {
+    setTransform() {},
+    clearRect() {
+      dots = 0;
+    },
+    beginPath() {},
+    arc() {
+      dots++;
+    },
+    fill() {},
+    moveTo() {},
+    lineTo() {},
+    stroke() {},
+    createLinearGradient() {
+      return { addColorStop() {} };
+    },
+  };
+  canvas.getContext = () => context;
+  canvas.closest = () => ({ clientWidth: 220, clientHeight: 900 });
+  const doc = new Element();
+  doc.hidden = false;
+  doc.documentElement = { dataset: { theme: 'dark' } };
+  doc.querySelector = (selector) => (selector === '[data-sidebar-stars]' ? canvas : null);
+  const win = new Element();
+  Object.assign(win, { innerWidth: 1200, innerHeight: 900, devicePixelRatio: 1 });
+  const reduced = new Element();
+  reduced.matches = false;
+  const clock = animationClock();
+  const api = await load(
+    'home-stars.js',
+    {
+      document: doc,
+      window: win,
+      matchMedia: () => reduced,
+      AbortController,
+      performance: { now: () => 0 },
+      ...clock,
+    },
+    'enableSidebarStars, renderSidebarStars',
+  );
+  assert.equal(
+    api.renderSidebarStars(),
+    '<div class="sidebar-stars" aria-hidden="true"><canvas data-sidebar-stars></canvas></div>',
+  );
+  const stop = api.enableSidebarStars();
+  assert.equal(canvas.width, 220);
+  assert.ok(dots >= 15 && dots <= 50);
+  assert.equal(clock.tasks.size, 1);
+  stop();
+  assert.equal(clock.tasks.size, 0);
+});
+
 test('custom intro/follow-up never sends a clue without a resume activation question', async () => {
   const nodes = new Map();
   for (const selector of [

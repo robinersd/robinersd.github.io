@@ -53,12 +53,7 @@
   overflow: hidden;
   overscroll-behavior: contain;
   scrollbar-width: thin;
-  /* Reserve a separate chat dock below the scroll area, including phone keyboards. */
-  padding: 0 0
-    calc(
-      var(--sidebar-chat-space) + env(safe-area-inset-bottom, 0px) +
-        var(--chat-keyboard-offset, 0px)
-    );
+  padding: 0;
   z-index: 12;
   color: var(--muted);
   font-size: 14px;
@@ -70,34 +65,32 @@
 .portfolio-sidebar[hidden] {
   display: none;
 }
+.sidebar-stars {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0.85;
+}
+.sidebar-stars canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
 .sidebar-scroll-content {
+  position: relative;
+  z-index: 1;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
-  padding: 16px 10px 20px;
-  scroll-padding-block: 12px 20px;
+  padding: 16px 10px calc(56px + env(safe-area-inset-bottom, 0px));
+  scroll-padding-block: 12px 56px;
 }
 .sidebar-open .robiner-chat {
-  right: 12px;
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px) + var(--chat-keyboard-offset, 0px));
-}
-.sidebar-open #robiner-chat-launcher {
-  width: calc(var(--sidebar-width) - 24px);
-  height: 56px;
-  padding: 8px;
-  gap: 8px;
-  font-size: 13px;
-  line-height: 1.35;
-  white-space: normal;
-  justify-content: center;
-}
-.sidebar-open #robiner-chat-launcher svg {
-  flex-shrink: 0;
-}
-.sidebar-open #robiner-chat-launcher span {
-  min-width: 0;
+  display: none !important;
 }
 .section-tracker-heading {
   margin: 0 0 10px 8px;
@@ -176,6 +169,7 @@
     width: 220px !important;
     height: 100vh !important;
     max-height: 100vh !important;
+    padding: 0 !important;
     border-radius: 0 !important;
     border-right: 1px solid var(--line) !important;
     border-left: none !important;
@@ -190,6 +184,7 @@
   }
   .sidebar-scroll-content {
     padding-top: 32px !important;
+    padding-bottom: 56px !important;
   }
   .sidebar-phone-close {
     display: none !important;
@@ -228,6 +223,7 @@
     width: 100vw !important;
     height: 100vh !important;
     max-height: 100vh !important;
+    padding: 0 !important;
     border-radius: 0 !important;
     border: none !important;
     background: color-mix(in srgb, var(--background) 96%, transparent) !important;
@@ -296,7 +292,7 @@
     font-size: 13px;
   }
   .sidebar-scroll-content {
-    padding: 12px 8px 20px;
+    padding: 16px 12px calc(56px + env(safe-area-inset-bottom, 0px)) !important;
   }
   .sidebar-open #robiner-chat-launcher {
     font-size: 12px;
