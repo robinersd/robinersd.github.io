@@ -61,9 +61,10 @@ export function enableSectionTracker() {
       return;
     }
     panel.hidden = false;
-    // Include the right-hand gutter so the entire panel starts outside the screen.
-    const distance = Math.max(0, window.innerWidth - panel.getBoundingClientRect().left + 12);
-    const outside = { transform: `translateX(${distance}px)`, opacity: 0 };
+    // Slide through gutter so the entire panel smoothly slides from/to the left.
+    const rect = panel.getBoundingClientRect();
+    const distance = rect.right > 0 ? rect.right + 16 : window.innerWidth - rect.left + 12;
+    const outside = { transform: `translateX(-${distance}px)`, opacity: 0 };
     const inside = { transform: 'translateX(0)', opacity: 1 };
     const running = panel.animate(value ? [outside, inside] : [inside, outside], {
       duration: 300,
@@ -110,12 +111,34 @@ export function enableSectionTracker() {
         link.setAttribute('aria-current', home ? 'location' : 'page');
       else link.removeAttribute('aria-current');
     });
+    const phoneLabel = document.querySelector('[data-current-section]');
+    if (phoneLabel && active) {
+      const prettyName = active.charAt(0).toUpperCase() + active.slice(1);
+      phoneLabel.textContent = prettyName;
+    }
+    const scrollContainer = panel.querySelector?.('.sidebar-scroll-content') || document.querySelector?.('.sidebar-scroll-content');
+    if (scrollContainer && typeof scrollContainer.scrollTo === 'function') {
+      if (active === 'intro') {
+        scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        const activeLink = links.find((link) => link.dataset.sectionTarget === active);
+        if (activeLink && typeof activeLink.offsetTop === 'number') {
+          const linkTop = activeLink.offsetTop;
+          const containerHeight = scrollContainer.clientHeight || 400;
+          if (linkTop < (scrollContainer.scrollTop || 0) || linkTop > (scrollContainer.scrollTop || 0) + containerHeight - 60) {
+            scrollContainer.scrollTo({ top: Math.max(0, linkTop - 40), behavior: 'smooth' });
+          }
+        }
+      }
+    }
   }
   function schedule() {
     if (!stopped && !document.hidden && !frame) frame = requestAnimationFrame(update);
   }
   setExpanded(expanded, firstOpen && expanded);
   listen(toggle, 'click', () => setExpanded(!expanded));
+  const phoneClose = document.querySelector('#sidebar-phone-close');
+  if (phoneClose) listen(phoneClose, 'click', () => setExpanded(false));
   listen(window, 'scroll', schedule, { passive: true });
   listen(window, 'resize', schedule, { passive: true });
   listen(document, 'visibilitychange', schedule);

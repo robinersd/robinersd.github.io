@@ -1,7 +1,7 @@
 import { enableRobinerSkillPreview } from './skill-preview.js?v=chat-56';
 import { enableRobinerTheme } from './theme.js?v=theme-queue-62';
 import { renderStaggeredSkills, enableStaggeredSkills } from './staggered-skills.js?v=chat-56';
-import { enableRobinerChat } from './chat.js?v=chat-intent-95';
+import { enableRobinerChat } from './chat.js?v=chat-delay-97';
 import { enableSocialDock } from './social-dock.js?v=chat-56';
 import { enableEncryptedName } from './encrypted-name.js?v=chat-56';
 import { renderHomeStars, enableHomeStars } from './home-stars.js?v=chat-56';
@@ -301,7 +301,7 @@ function contactSection() {
     <div class="contact-links">
       ${externalLink(profile.github, 'GitHub')}${externalLink(profile.linkedin, 'LinkedIn')}<a
         href="${basePath}/resume"
-        >View resume</a
+        >View Résumé</a
       >
     </div>
   </section>`;
@@ -320,7 +320,7 @@ function gallerySection() {
 function resumePage() {
   return /* HTML */ `<div class="page-intro">
       <span class="eyebrow">My background at a glance</span>
-      <h1>Resume</h1>
+      <h1>Résumé</h1>
       <p>Education, projects, skills, and academic recognition.</p>
     </div>
     ${renderResumeGate()}`;
@@ -658,7 +658,7 @@ function homePage() {
       </div>
       <div class="hero-actions">
         <a class="button primary" href="${basePath}/projects">Explore projects</a
-        ><a class="button" href="${basePath}/resume">View resume</a>
+        ><a class="button" href="${basePath}/resume">View Résumé</a>
         ${socialDock()}
       </div>
     </section>
@@ -783,8 +783,18 @@ function renderPage({ partial = false } = {}) {
         aria-label="Page menu and visitors"
         hidden
       >
+        <button
+          type="button"
+          id="sidebar-phone-close"
+          class="sidebar-phone-close"
+          aria-label="Close menu"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" width="22" height="22">
+            <path d="M18 6 6 18M6 6l12 12" stroke-linecap="round"/>
+          </svg>
+        </button>
         <div class="sidebar-scroll-content">
-          <p class="section-tracker-heading">On this page</p>
+          <p class="section-tracker-heading">robinersd</p>
           <nav
             id="sidebar-section-links"
             class="section-tracker-links"
@@ -793,6 +803,10 @@ function renderPage({ partial = false } = {}) {
           ${renderCommunityPanel()}
         </div>
       </aside>
+      <div id="phone-section-indicator" class="phone-section-indicator" aria-hidden="true">
+        <span class="phone-section-indicator__dot"></span>
+        <span class="phone-section-indicator__label" data-current-section>Intro</span>
+      </div>
       <footer class="container">
         <div>
           <strong>${text(profile.name)}</strong>

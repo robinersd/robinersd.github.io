@@ -53,7 +53,7 @@ body {
     BlinkMacSystemFont,
     'Segoe UI',
     sans-serif;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.75;
   -webkit-font-smoothing: antialiased;
 }
@@ -715,7 +715,7 @@ h3 {
 
 .timeline-item h3 {
   margin: 0;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .timeline-item p {
@@ -1139,7 +1139,7 @@ html.photo-viewer-open {
     font-size: 11px;
   }
   .introduction {
-    font-size: 14px;
+    font-size: 15px;
   }
   .social-links {
     margin-left: 0;
@@ -1733,7 +1733,7 @@ button:not(.profile-portrait):not(.skill-badge):active {
   background: transparent;
   color: var(--ink);
   font: inherit;
-  font-size: 16px;
+  font-size: 15px;
   outline: none;
 }
 
@@ -2002,7 +2002,7 @@ button:not(.profile-portrait):not(.skill-badge):active {
   background: var(--background);
   color: var(--ink);
   font: inherit;
-  font-size: 16px;
+  font-size: 15px;
   resize: vertical;
 }
 
@@ -2324,7 +2324,7 @@ a.project-card:hover {
     height: 210px;
   }
   .project-card .project-summary {
-    font-size: 14px;
+    font-size: 15px;
   }
 }
 
@@ -2566,7 +2566,7 @@ a.project-card:hover {
   animation: robiner-spotify-in 340ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-#robiner-spotify-dialog[open]::backdrop {
+#robiner-spotify-dialog[open]:not(.is-spotify-mini)::backdrop {
   animation: robiner-spotify-backdrop-in 300ms ease both;
 }
 
@@ -2575,7 +2575,7 @@ a.project-card:hover {
   pointer-events: none;
 }
 
-#robiner-spotify-dialog[open].is-spotify-closing::backdrop {
+#robiner-spotify-dialog[open].is-spotify-closing:not(.is-spotify-mini)::backdrop {
   animation: robiner-spotify-backdrop-out 180ms ease-in both;
 }
 
@@ -2745,9 +2745,15 @@ a.project-card:hover {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   overflow: clip;
-  z-index: 12;
+  z-index: 95;
   animation: none;
   transform: none;
+}
+
+#robiner-spotify-dialog.is-spotify-mini[open]::backdrop {
+  display: none;
+  background: transparent;
+  pointer-events: none;
 }
 
 :root[data-theme='dark'] #robiner-spotify-dialog.is-spotify-mini[open] {
@@ -3318,11 +3324,11 @@ a.project-card:hover {
   .project-grid.detailed-grid.project-desktop {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 20px;
-    align-items: stretch;
+    align-items: start;
   }
   .project-desktop > .project-card {
     grid-column: auto;
-    min-height: 500px;
+    min-height: unset;
     padding: 10px;
     transform: none;
     transition:
@@ -3352,7 +3358,7 @@ a.project-card:hover {
     font-size: 13px;
   }
   .project-desktop .project-summary {
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1.65;
   }
   .project-desktop .project-period {
@@ -3380,5 +3386,71 @@ a.project-card:hover {
   .project-desktop > .project-card.is-deck-pressed {
     transform: none;
     transition: none;
+  }
+}
+
+
+/* True Vengence UI TeamRevealGrid Adaptive Expand */
+@media (min-width: 900px) {
+  .project-desktop > .project-card {
+    min-height: unset !important;
+    height: 280px !important;
+    overflow: hidden;
+    transition: height 450ms cubic-bezier(0.16, 1, 0.3, 1),
+                transform 450ms cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 350ms ease,
+                box-shadow 450ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+
+  .project-desktop > .project-card .project-summary,
+  .project-desktop > .project-card .project-period,
+  .project-desktop > .project-card .project-tools {
+    opacity: 0;
+    transform: translateY(16px);
+    max-height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    pointer-events: none;
+    transition: opacity 400ms cubic-bezier(0.16, 1, 0.3, 1),
+                transform 400ms cubic-bezier(0.16, 1, 0.3, 1),
+                max-height 400ms cubic-bezier(0.16, 1, 0.3, 1),
+                margin 300ms ease,
+                padding 300ms ease;
+  }
+
+  .project-desktop > .project-card:hover,
+  .project-desktop > .project-card:focus-within {
+    height: 480px !important;
+    transform: translateY(-6px) !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 20px 40px -12px rgba(40, 100, 84, 0.35) !important;
+  }
+
+  .project-desktop > .project-card:hover .project-summary,
+  .project-desktop > .project-card:focus-within .project-summary {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 140px;
+    margin-bottom: 12px;
+    pointer-events: auto;
+  }
+
+  .project-desktop > .project-card:hover .project-period,
+  .project-desktop > .project-card:focus-within .project-period {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 40px;
+    margin-bottom: 10px;
+    pointer-events: auto;
+  }
+
+  .project-desktop > .project-card:hover .project-tools,
+  .project-desktop > .project-card:focus-within .project-tools {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 60px;
+    padding-top: 8px;
+    pointer-events: auto;
   }
 }

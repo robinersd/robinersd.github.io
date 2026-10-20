@@ -323,6 +323,8 @@ test('custom intro/follow-up never sends a clue without a resume activation ques
     stop() {},
   };
   const pauses = [];
+  let holdThinking = false;
+  const heldReplies = [];
   let activations = 0;
   const requests = [];
   const api = await load(
@@ -346,7 +348,11 @@ test('custom intro/follow-up never sends a clue without a resume activation ques
       clearTimeout() {},
       setTimeout(callback, delay) {
         pauses.push(delay);
-        if (delay === 3000) callback();
+        if (delay === 3000) {
+          if (holdThinking && panel.dataset.chatPhase === 'answer-thinking')
+            heldReplies.push(callback);
+          else callback();
+        }
         return 1;
       },
       async requestChatReply(messages, attachments) {
@@ -415,8 +421,22 @@ test('custom intro/follow-up never sends a clue without a resume activation ques
   assert.equal(log.children.at(-1).textContent, resumeClue);
   assert.equal(activations, 1, 'help alone does not activate anything');
   await nodes.get('.chat-reset').emit('click');
+  holdThinking = true;
+  const pausesBeforeSkills = pauses.length;
   nodes.get('#robiner-chat-input').value = 'What are Robiner’s skills?';
   await nodes.get('form').emit('submit');
+  assert.equal(nodes.get('.chat-status').textContent, 'Thinking…');
+  assert.equal(nodes.get('.chat-send').disabled, true);
+  assert.equal(panel.dataset.chatPhase, 'answer-thinking');
+  assert.equal(
+    log.children.at(-1).textContent,
+    'What are Robiner’s skills?',
+    'The answer is withheld until the 3-second timer finishes',
+  );
+  assert.deepEqual(pauses.slice(pausesBeforeSkills), [3000]);
+  heldReplies.shift()();
+  await new Promise((resolve) => setImmediate(resolve));
+  holdThinking = false;
   assert.match(log.children.at(-1).textContent, /TypeScript/);
   assert.match(log.children.at(-1).textContent, /React/);
   assert.equal(requests.length, 2, 'Known resume answers need no API, even as the first question');

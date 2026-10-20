@@ -29,7 +29,12 @@ export function renderCommunityPanel() {
     <div class="community-viewing"><i class="community-live-dot" aria-hidden="true"></i><strong data-community-live>—</strong> viewing now</div>
     <div class="community-rating-summary"><strong data-community-rating>—</strong><span data-community-rating-count>Portfolio rating</span></div>
     <button type="button" class="button community-feedback-open" data-feedback-open aria-haspopup="dialog" aria-controls="portfolio-feedback">Leave feedback</button>
-    <p class="community-inquiries">For work inquiries, projects, and everything else — feel free to contact me at email: <a href="mailto:dahaprobiner@gmail.com"><svg class="community-email-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg>dahaprobiner@gmail.com</a></p>
+    <div class="community-inquiries">
+      <p class="community-inquiries-text">For work inquiries, projects, and everything else — feel free to contact me at email:</p>
+      <a class="community-inquiries-email" href="mailto:dahaprobiner@gmail.com">
+        <svg class="community-email-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg>dahaprobiner@gmail.com
+      </a>
+    </div>
     <span class="community-availability visually-hidden" data-community-availability>Loading visitor statistics.</span>
   </section>`;
 }

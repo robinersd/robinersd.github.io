@@ -357,10 +357,10 @@ test('a visitor closing the menu stays respected across route initialization and
   stopAgain();
 });
 
-test('menu slides fully in from the right, closes with a slide, and survives rapid toggles', async () => {
+test('menu slides fully in from the left, closes with a slide, and survives rapid toggles', async () => {
   const h = await setup({ desktop: true, animated: true });
   assert.equal(h.tracker.hidden, false);
-  assert.equal(h.animations[0].keyframes[0].transform, 'translateX(312px)');
+  assert.equal(h.animations[0].keyframes[0].transform, 'translateX(-312px)');
   assert.equal(h.animations[0].keyframes[1].transform, 'translateX(0)');
   h.animations[0].finish();
   await Promise.resolve();

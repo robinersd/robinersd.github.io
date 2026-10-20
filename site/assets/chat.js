@@ -29,7 +29,7 @@ export function enableRobinerChat() {
   const greeting = greetingNode.textContent.replace(/\s+/g, ' ').trim();
   greetingNode.textContent = greeting;
   const history = [];
-  panel.dataset.chatVersion = 'chat-intent-95';
+  panel.dataset.chatVersion = 'chat-delay-97';
   panel.dataset.chatPhase = 'intro-ready';
   let pending = false;
   let finishing = false;
@@ -229,7 +229,7 @@ export function enableRobinerChat() {
         const link = document.createElement('a');
         link.href = '/resume';
         link.className = 'chat-resume-link';
-        link.textContent = 'View resume';
+        link.textContent = 'View Résumé';
         reply.append(link);
         introShown = true;
         return;
@@ -246,6 +246,9 @@ export function enableRobinerChat() {
       const publicAnswer =
         !attachments.length && !casual ? getPortfolioAnswer(content, { history }) : null;
       if (publicAnswer) {
+        panel.dataset.chatPhase = 'answer-thinking';
+        status.textContent = 'Thinking…';
+        await wait(introDelay);
         introShown = true;
         history.push(
           { role: 'user', content },
@@ -281,11 +284,12 @@ export function enableRobinerChat() {
       const controller = new AbortController();
       timeout = setTimeout(() => controller.abort(), 45000);
       // Scripted intro/follow-up messages stay out of AI context.
-      const data = await requestChatReply(
-        [...history.slice(-6), { role: 'user', content: prompt }],
-        attachments,
-        { signal: controller.signal },
-      );
+      const [data] = await Promise.all([
+        requestChatReply([...history.slice(-6), { role: 'user', content: prompt }], attachments, {
+          signal: controller.signal,
+        }),
+        attachments.length ? Promise.resolve() : wait(introDelay),
+      ]);
       const delivery = sentMessage.querySelector('.chat-message-delivery');
       if (delivery) delivery.textContent = 'Sent';
       // Keep text summaries in context, not repeated large media blobs.
