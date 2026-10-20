@@ -199,6 +199,19 @@
     margin-left: calc(220px + max(24px, (100vw - 220px - 780px) / 2)) !important;
     margin-right: max(24px, calc((100vw - 220px - 780px) / 2)) !important;
   }
+  .portfolio-sidebar .community-panel,
+  .portfolio-sidebar .community-visit-pill,
+  .portfolio-sidebar .community-viewing,
+  .portfolio-sidebar .community-rating-summary,
+  .portfolio-sidebar .community-rating-summary strong,
+  .portfolio-sidebar .community-rating-summary span,
+  .portfolio-sidebar .community-panel .community-feedback-open,
+  .portfolio-sidebar .community-inquiries,
+  .portfolio-sidebar .community-inquiries-text,
+  .portfolio-sidebar .community-inquiries a,
+  .portfolio-sidebar .community-inquiries-email {
+    font-size: 14px !important;
+  }
 }
 
 

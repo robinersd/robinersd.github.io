@@ -177,16 +177,29 @@ nav {
 }
 
 #theme-toggle {
-  display: grid;
+  display: inline-grid;
   place-items: center;
-  width: 58px;
-  height: 44px;
+  width: 62px;
+  height: 48px;
   padding: 0;
   border: 0;
-  background: none;
+  background: transparent;
   color: var(--ink);
   cursor: pointer;
   flex-shrink: 0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  border-radius: 999px;
+  transition: transform 140ms ease, opacity 140ms ease;
+}
+
+#theme-toggle:hover {
+  opacity: 0.92;
+}
+
+#theme-toggle:active {
+  transform: scale(0.95);
 }
 
 .theme-track {
@@ -194,38 +207,39 @@ nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 54px;
-  height: 28px;
-  padding: 5px;
+  width: 56px;
+  height: 30px;
+  padding: 4px 6px;
   border: 1px solid var(--line);
   border-radius: 20px;
   background: var(--tag);
+  transition: background-color 220ms ease, border-color 220ms ease;
 }
 
 .theme-track svg {
   position: relative;
   z-index: 1;
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   pointer-events: none;
+  transition: color 200ms ease, opacity 200ms ease;
 }
 
 .theme-thumb {
-  /* Give the slider its own moving snapshot during the circular page reveal.
-     Browsers without view transitions retain the ordinary CSS transform transition. */
   view-transition-name: theme-toggle-thumb;
   position: absolute;
   left: 3px;
   top: 3px;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 1px 4px #0002;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   transform: translateX(0);
   transition:
-    transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1),
-    background-color 240ms ease;
+    transform 260ms cubic-bezier(0.34, 1.4, 0.64, 1),
+    background-color 220ms ease;
+  will-change: transform;
 }
 
 .theme-sun {
@@ -937,15 +951,12 @@ footer {
   font-size: 11px;
 }
 
-footer strong {
-  color: var(--ink);
-  font-weight: 500;
-  font-size: 17px;
-}
-
+.footer-copyright,
+footer strong,
 footer p {
-  margin: 3px 0;
-  font-size: 17px;
+  margin: 0;
+  font-size: 12px !important;
+  color: var(--muted);
 }
 
 .page-intro {
@@ -2568,7 +2579,7 @@ a.project-card:hover {
 
 .theme-reveal-active::view-transition-new(root) {
   z-index: 2;
-  animation: robiner-circle-reveal 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: robiner-circle-reveal 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes robiner-circle-reveal {

@@ -809,8 +809,7 @@ function renderPage({ partial = false } = {}) {
       </div>
       <footer class="container">
         <div>
-          <strong>${text(profile.name)}</strong>
-          <p>Building, learning, and improving.</p>
+          <p class="footer-copyright">© 2026 Robiner B. Dahap . All rights reserved.</p>
         </div>
         ${renderCommunityVisitors()}
       </footer>

@@ -59,20 +59,35 @@ footer.container {
 }
 @media (max-width: 600px) {
   footer.container {
-    gap: 18px;
+    gap: 14px;
+    align-items: stretch;
   }
   .footer-visitors {
-    max-width: calc(100vw - 200px);
-    gap: 6px;
-    min-height: 48px;
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+  }
+  .footer-visitors .community-avatar-stack {
+    display: flex;
+    flex-shrink: 0;
   }
   .footer-visitors .community-avatar {
     width: 25px;
     height: 25px;
   }
   .footer-visitors .community-visit-pill {
+    margin-left: auto;
     font-size: 11px;
-    padding: 4px 7px;
+    padding: 3px 8px;
+    white-space: nowrap;
+  }
+  .footer-visitors .community-visit-pill strong {
+    font-size: 11px;
+    font-weight: 500;
   }
 }
 .community-viewing {

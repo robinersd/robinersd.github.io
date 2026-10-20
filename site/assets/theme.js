@@ -53,8 +53,7 @@ export function enableRobinerTheme() {
           busy = false;
           transition = null;
           root.classList.remove('theme-reveal-active');
-          if (root.dataset.theme !== next) apply(next);
-          reveal();
+          if (root.dataset.theme !== desired) reveal();
         });
     } catch {
       busy = false;
@@ -78,8 +77,13 @@ export function enableRobinerTheme() {
       } catch {
         /* Session-only theme. */
       }
-      if (busy) transition?.skipTransition();
-      else reveal();
+      if (busy) {
+        try {
+          transition?.skipTransition();
+        } catch {}
+      } else {
+        reveal();
+      }
     },
     { signal: lifecycle.signal },
   );
