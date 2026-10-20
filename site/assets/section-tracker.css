@@ -101,7 +101,7 @@
 }
 .section-tracker-heading {
   margin: 0 0 10px 8px;
-  font-size: 18px;
+  font-size: 15px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   font-weight: 600;
@@ -117,10 +117,10 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 42px;
+  min-height: 38px;
   padding: 7px 8px;
   border-radius: 6px;
-  font-size: 18px;
+  font-size: 15px;
   color: var(--muted);
   transition:
     color 180ms ease,
@@ -195,8 +195,9 @@
     display: none !important;
   }
   .container {
-    width: min(100% - 48px, 780px) !important;
-    margin-inline: auto !important;
+    width: min(calc(100vw - 220px - 48px), 780px) !important;
+    margin-left: calc(220px + max(24px, (100vw - 220px - 780px) / 2)) !important;
+    margin-right: max(24px, calc((100vw - 220px - 780px) / 2)) !important;
   }
 }
 
@@ -289,21 +290,19 @@
   }
   .section-tracker-heading {
     margin-left: 4px;
-    font-size: 18px;
+    font-size: 15px;
     letter-spacing: 0.07em;
   }
   .section-tracker-links a {
     min-height: 44px;
     gap: 6px;
     padding-inline: 4px;
-    font-size: 18px;
+    font-size: 15px;
   }
   .sidebar-open #main.container {
-    width: calc(100% - var(--phone-sidebar-width) - 40px);
-    margin-left: 16px;
-    margin-right: 0;
+    width: min(100% - 36px, 780px);
+    margin-inline: auto;
     min-width: 0;
-    overflow-x: clip;
   }
   .sidebar-open footer.container > div:first-child {
     max-width: calc(100% - var(--phone-sidebar-width));

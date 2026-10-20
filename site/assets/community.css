@@ -32,7 +32,7 @@
   border: 1px dashed var(--line);
   border-radius: 999px;
   padding: 4px 9px;
-  font-size: 18px;
+  font-size: 15px;
   max-width: 100%;
   color: var(--accent);
 }
@@ -79,7 +79,7 @@ footer.container {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 18px;
+  font-size: 15px;
 }
 .community-viewing strong {
   color: var(--ink);
@@ -88,21 +88,21 @@ footer.container {
 .community-rating-summary {
   display: grid;
   gap: 2px;
-  font-size: 18px;
+  font-size: 15px;
 }
 .community-rating-summary strong {
   color: var(--ink);
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 500;
 }
 .community-rating-summary span {
   color: var(--muted);
-  font-size: 18px;
+  font-size: 15px;
 }
 .community-panel .community-feedback-open {
   min-height: 44px;
   padding: 6px 10px;
-  font-size: 18px;
+  font-size: 15px;
   width: 100%;
   justify-content: center;
 }
@@ -110,7 +110,7 @@ footer.container {
   margin: 6px 0 0;
   min-width: 0;
   max-width: 100%;
-  font-size: 18px;
+  font-size: 15px;
   line-height: 1.5;
   color: var(--muted);
   overflow-wrap: anywhere;
@@ -120,7 +120,7 @@ footer.container {
   font-weight: 500;
   text-decoration: underline;
   text-underline-offset: 3px;
-  font-size: 18px;
+  font-size: 15px;
 }
 .community-email-icon {
   display: inline-block;
