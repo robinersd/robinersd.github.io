@@ -31,7 +31,7 @@ import { enableRobinerProjectDeck } from './project-deck.js?v=project-swipe-90';
 import { enableRobinerProfile } from './profile.js?v=profile-cutout-65';
 import { enableRobinerNavigation, basePath } from './navigation.js?v=v2-fix';
 import { renderPixelGallery, enablePixelGallery } from './pixel-gallery.js?v=chat-56';
-import { enableRobinerSpotify } from './spotify.js?v=spotify-activation-74';
+import { enableRobinerSpotify } from './spotify.js?v=spotify-activation-75';
 import { enableSectionTracker } from './section-tracker.js?v=sidebar-contact-85';
 import { enableTextType } from './text-type.js?v=spotify-hint-86';
 import {

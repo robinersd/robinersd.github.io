@@ -1612,6 +1612,10 @@ button:not(.profile-portrait):not(.skill-badge):active {
 
 #robiner-chat-launcher {
   box-shadow: 0 6px 24px #142b2926;
+  width: auto;
+  max-width: max-content;
+  align-self: flex-end;
+  flex: 0 0 auto;
 }
 
 .chat-panel {
@@ -2926,7 +2930,7 @@ a.project-card:hover {
 
 @media (min-width: 1024px) {
   #robiner-spotify-dialog.is-spotify-mini[open] {
-    inset: var(--spotify-mini-y, auto) auto var(--spotify-mini-bottom, 24px) var(--spotify-mini-x, 236px);
+    inset: var(--spotify-mini-y, auto) auto auto var(--spotify-mini-x, 236px);
   }
 }
 

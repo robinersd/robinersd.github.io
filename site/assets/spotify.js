@@ -1,4 +1,4 @@
-import { enableRobinerSpotifyPosition } from './spotify-position.js?v=mobile-wave-61';
+import { enableRobinerSpotifyPosition } from './spotify-position.js?v=mobile-wave-62';
 
 // One persistent Spotify iframe. Minimizing changes presentation, never its DOM parent.
 let spotifyApiPromise;

@@ -188,7 +188,9 @@
   }
   .robiner-chat,
   :root.sidebar-open .robiner-chat {
-    display: grid !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
     position: fixed !important;
     right: 24px !important;
     bottom: 24px !important;
@@ -196,7 +198,10 @@
   }
   #robiner-chat-launcher {
     width: auto !important;
+    max-width: max-content !important;
     height: auto !important;
+    align-self: flex-end !important;
+    flex: 0 0 auto !important;
   }
   .sidebar-scroll-content {
     padding-top: 32px !important;

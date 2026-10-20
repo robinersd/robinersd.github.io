@@ -22,6 +22,14 @@ export function enableRobinerSpotifyPosition(dialog) {
     const margin = width <= 600 ? 10 : 16;
     const playerWidth = dialog.offsetWidth;
     const playerHeight = dialog.offsetHeight;
+    let minX = left + margin;
+    const sidebar = document.querySelector?.('#portfolio-sidebar');
+    if (sidebar && !sidebar.hidden && width >= 1024) {
+      const sbRect = sidebar.getBoundingClientRect?.();
+      if (sbRect && sbRect.right > left && sbRect.width > 50) {
+        minX = Math.max(minX, Math.round(sbRect.right + margin));
+      }
+    }
     let minY = top + margin;
     const header = document.querySelector('header')?.getBoundingClientRect();
     if (header && header.bottom > top && header.top < top + height)
@@ -31,8 +39,8 @@ export function enableRobinerSpotifyPosition(dialog) {
       minY = Math.max(minY, back.bottom + 10);
     const maxY = Math.max(top + margin, top + height - playerHeight - margin);
     return {
-      minX: left + margin,
-      maxX: Math.max(left + margin, left + width - playerWidth - margin),
+      minX,
+      maxX: Math.max(minX, left + width - playerWidth - margin),
       minY: Math.min(minY, maxY),
       maxY,
       width,
