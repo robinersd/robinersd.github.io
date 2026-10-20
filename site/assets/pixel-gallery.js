@@ -1,7 +1,13 @@
 // PixelatedImageTrail supplied by the user, scoped to the gallery and adapted for touch.
 export function renderPixelGallery(photos, escape) {
-  return `<div class="pixel-gallery-zone" data-pixel-gallery tabindex="0" role="region" aria-label="Interactive gallery image trail">
-    <p class="pixel-gallery-prompt">Move or swipe to explore</p>
+  const base =
+    typeof window !== 'undefined' && window.location?.pathname?.startsWith('/myportfolio')
+      ? '/myportfolio'
+      : '';
+  return `<div class="pixel-gallery-zone" data-pixel-gallery tabindex="0" role="region" aria-label="Interactive gallery image trail. Move or swipe to explore">
+    <div class="pixel-gallery-backdrop" aria-hidden="true">
+      <img src="${base}/assets/images/gallery/gallery-quote.png" alt="Quote: With god all things are possible. Mathew 19:26" class="pixel-gallery-quote-img" loading="eager" decoding="async" />
+    </div>
     <div class="pixel-gallery-layer" aria-hidden="true"></div>
   </div>
 `;

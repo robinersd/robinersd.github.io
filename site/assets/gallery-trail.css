@@ -22,16 +22,42 @@
   inset: 0;
   overflow: hidden;
   pointer-events: none;
+  z-index: 1;
+}
+
+.pixel-gallery-backdrop {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  padding: 16px;
+}
+
+.pixel-gallery-quote-img {
+  max-width: min(290px, 75%);
+  max-height: min(340px, 82%);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+  display: block;
+  opacity: 0.92;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+[data-theme='light'] .pixel-gallery-quote-img {
+  box-shadow: 0 12px 32px rgba(25, 32, 32, 0.15), 0 0 0 1px rgba(25, 32, 32, 0.08);
 }
 
 .pixel-gallery-prompt {
-  position: absolute;
-  inset: 45% 0 auto;
-  margin: 0;
-  text-align: center;
-  font-size: 13px;
-  color: var(--muted);
-  pointer-events: none;
+  display: none;
 }
 
 .pixel-trail-image {
@@ -52,5 +78,10 @@
 @media (max-width: 600px) {
   .pixel-gallery-zone {
     height: 330px;
+  }
+  .pixel-gallery-quote-img {
+    max-width: min(230px, 72%);
+    max-height: min(260px, 78%);
+    border-radius: 14px;
   }
 }
