@@ -31,15 +31,6 @@ export function enableSectionTracker() {
     const text = document.createElement('span');
     text.textContent = label;
     link.append(text);
-    const arrow = document.createElement('span');
-    arrow.className = 'card-nav__arrow';
-    arrow.setAttribute('aria-hidden', 'true');
-    const arrowOut = document.createElement('i');
-    arrowOut.className = 'card-nav__arrow-icon card-nav__arrow-icon--out';
-    const arrowIn = document.createElement('i');
-    arrowIn.className = 'card-nav__arrow-icon card-nav__arrow-icon--in';
-    arrow.append(arrowOut, arrowIn);
-    link.append(arrow);
     nav.append(link);
     return link;
   });
@@ -71,13 +62,17 @@ export function enableSectionTracker() {
       return;
     }
     panel.hidden = false;
-    // Slide through gutter so the entire panel smoothly slides from/to the left.
+    // Slide from top on mobile, and from left on desktop.
     const rect = panel.getBoundingClientRect();
     const distance = rect.right > 0 ? rect.right + 16 : window.innerWidth - rect.left + 12;
-    const outside = { transform: `translateX(-${distance}px)`, opacity: 0 };
-    const inside = { transform: 'translateX(0)', opacity: 1 };
+    const outside = desktop.matches
+      ? { transform: `translateX(-${distance}px)`, opacity: 0 }
+      : { transform: 'translateY(-16px)', opacity: 0 };
+    const inside = desktop.matches
+      ? { transform: 'translateX(0)', opacity: 1 }
+      : { transform: 'translateY(0)', opacity: 1 };
     const running = panel.animate(value ? [outside, inside] : [inside, outside], {
-      duration: 300,
+      duration: 280,
       easing: 'cubic-bezier(.22,1,.36,1)',
       fill: 'both',
     });
