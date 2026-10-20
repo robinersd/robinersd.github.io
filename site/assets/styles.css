@@ -2924,6 +2924,12 @@ a.project-card:hover {
   margin-right: 18px;
 }
 
+@media (min-width: 1024px) {
+  #robiner-spotify-dialog.is-spotify-mini[open] {
+    inset: var(--spotify-mini-y, auto) auto var(--spotify-mini-bottom, 24px) var(--spotify-mini-x, 236px);
+  }
+}
+
 @media (max-width: 600px) {
   #robiner-spotify-dialog.is-spotify-mini[open] {
     inset: var(--spotify-mini-y, auto) auto auto var(--spotify-mini-x, 10px);

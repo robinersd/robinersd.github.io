@@ -20,9 +20,14 @@ export function enableHomeStars() {
   let previous = 0;
   let nextShootingStar = performance.now() + 1200;
   let color;
+  let starColor, trailColor, trailFade;
 
   function theme() {
-    color = document.documentElement.dataset.theme === 'dark' ? '209, 231, 226' : '63, 110, 100';
+    const isDark = document.documentElement.dataset.theme === 'dark';
+    color = isDark ? '209, 231, 226' : '63, 110, 100';
+    starColor = isDark ? '#9E00FF' : '#7C3AED';
+    trailColor = isDark ? 'rgba(46, 185, 223, 0.85)' : 'rgba(2, 132, 199, 0.85)';
+    trailFade = isDark ? 'rgba(46, 185, 223, 0)' : 'rgba(2, 132, 199, 0)';
   }
   function resize() {
     width = Math.max(1, window.innerWidth);
@@ -55,16 +60,21 @@ export function enableHomeStars() {
       context.fill();
     });
     streaks.forEach((star) => {
-      const tailX = star.x - 100;
-      const tailY = star.y - 55;
-      const gradient = context.createLinearGradient(tailX, tailY, star.x, star.y);
-      gradient.addColorStop(0, `rgba(${color}, 0)`);
-      gradient.addColorStop(1, `rgba(${color}, 0.85)`);
+      const radians = ((star.angle || 45) * Math.PI) / 180;
+      const headX = star.x;
+      const headY = star.y;
+      const length = (star.length || 100) * (star.scale || 1);
+      const tailX = headX - length * Math.cos(radians);
+      const tailY = headY - length * Math.sin(radians);
+      const gradient = context.createLinearGradient(tailX, tailY, headX, headY);
+      gradient.addColorStop(0, trailFade || `rgba(${color}, 0)`);
+      gradient.addColorStop(0.5, trailColor || `rgba(${color}, 0.5)`);
+      gradient.addColorStop(1, starColor || `rgba(${color}, 0.85)`);
       context.strokeStyle = gradient;
-      context.lineWidth = 1.5;
+      context.lineWidth = 1.8;
       context.beginPath();
       context.moveTo(tailX, tailY);
-      context.lineTo(star.x, star.y);
+      context.lineTo(headX, headY);
       context.stroke();
     });
   }
@@ -72,12 +82,29 @@ export function enableHomeStars() {
     if (time - lastDraw >= 1000 / 30) {
       const elapsed = Math.min((time - previous) / 1000 || 0, 0.1);
       if (time >= nextShootingStar) {
-        streaks.push({ x: Math.random() * width * 0.75, y: -100 });
-        nextShootingStar = time + 4000 + Math.random() * 5000;
+        // Spawn along the top or left of the whole viewport to streak straight across the entire homepage
+        const side = Math.random() < 0.65 ? 0 : 3;
+        const offset = side === 0 ? Math.random() * width : Math.random() * height * 0.5;
+        const angle = 45;
+        const speed = 400 + Math.random() * 220;
+        streaks.push({
+          x: side === 0 ? offset : -20,
+          y: side === 0 ? -20 : offset,
+          angle,
+          scale: 1,
+          speed,
+          distance: 0,
+          length: 95,
+        });
+        nextShootingStar = time + 1400 + Math.random() * 2600;
       }
       streaks.forEach((star) => {
-        star.x += elapsed * 540;
-        star.y += elapsed * 300;
+        const radians = ((star.angle || 45) * Math.PI) / 180;
+        const speed = star.speed || 500;
+        star.x += elapsed * speed * Math.cos(radians);
+        star.y += elapsed * speed * Math.sin(radians);
+        star.distance = (star.distance || 0) + elapsed * speed;
+        star.scale = 1 + star.distance / 250;
       });
       streaks = streaks.filter((star) => star.x < width + 150 && star.y < height + 150);
       draw(time);
