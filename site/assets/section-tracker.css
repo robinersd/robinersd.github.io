@@ -101,7 +101,7 @@
 }
 .section-tracker-heading {
   margin: 0 0 10px 8px;
-  font-size: 11px;
+  font-size: 18px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   font-weight: 600;
@@ -117,9 +117,10 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 38px;
+  min-height: 42px;
   padding: 7px 8px;
   border-radius: 6px;
+  font-size: 18px;
   color: var(--muted);
   transition:
     color 180ms ease,
@@ -288,13 +289,14 @@
   }
   .section-tracker-heading {
     margin-left: 4px;
-    font-size: 10px;
+    font-size: 18px;
     letter-spacing: 0.07em;
   }
   .section-tracker-links a {
     min-height: 44px;
     gap: 6px;
     padding-inline: 4px;
+    font-size: 18px;
   }
   .sidebar-open #main.container {
     width: calc(100% - var(--phone-sidebar-width) - 40px);
@@ -385,10 +387,10 @@
     font-size: 18px;
   }
   .sidebar-open .hero-copy .job-title {
-    font-size: 10px;
+    font-size: 18px;
   }
   .sidebar-open .hero-copy .introduction {
-    font-size: 13px;
+    font-size: 18px;
   }
   .sidebar-open .project-deck .project-copy {
     padding-inline: 2px;
