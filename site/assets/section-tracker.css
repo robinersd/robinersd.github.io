@@ -102,6 +102,7 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
   font-weight: 600;
+  color: var(--muted);
 }
 .section-tracker-links {
   display: grid;
@@ -140,20 +141,20 @@
   transition: transform 200ms ease;
 }
 .section-tracker-links a[aria-current] {
-  color: var(--accent);
-  background: var(--tag);
+  color: var(--ink);
+  background: var(--surface);
 }
 .section-tracker-links a[aria-current] span::after,
 .section-tracker-links a:focus-visible span::after {
   transform: scaleX(1);
 }
 .section-tracker-links a:active {
-  background: var(--tag);
+  background: var(--surface);
 }
 @media (hover: hover) {
   .section-tracker-links a:hover {
-    color: var(--accent);
-    background: var(--tag);
+    color: var(--ink);
+    background: var(--surface);
   }
   .section-tracker-links a:hover span::after {
     transform: scaleX(1);
@@ -183,8 +184,8 @@
     visibility: visible !important;
     z-index: 90 !important;
     background: color-mix(in srgb, var(--surface) 86%, transparent) !important;
-    backdrop-filter: blur(14px) saturate(120%) !important;
-    -webkit-backdrop-filter: blur(14px) saturate(120%) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
   }
   .robiner-chat,
   :root.sidebar-open .robiner-chat {
@@ -227,6 +228,12 @@
   .portfolio-sidebar .community-inquiries a,
   .portfolio-sidebar .community-inquiries-email {
     font-size: 14px !important;
+  }
+  .portfolio-sidebar .community-visit-pill {
+    color: var(--muted);
+  }
+  .portfolio-sidebar .community-visit-pill strong {
+    color: var(--ink);
   }
 }
 
