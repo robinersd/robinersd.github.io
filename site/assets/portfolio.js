@@ -334,13 +334,10 @@ function resumePage() {
 function photoDialog() {
   return /* HTML */ `<dialog id="photo-viewer" aria-labelledby="photo-caption">
     <div class="photo-visual">
-      <button type="button" class="photo-close" aria-label="Close photo viewer">×</button>
       <img id="photo-full" alt="" decoding="async" />
     </div>
     <p id="photo-caption" class="visually-hidden"></p>
     <span id="photo-counter" class="visually-hidden"></span>
-    <button type="button" class="photo-previous" aria-label="Previous photo">‹</button>
-    <button type="button" class="photo-next" aria-label="Next photo">›</button>
   </dialog>`;
 }
 
@@ -865,22 +862,76 @@ function showPhoto(index) {
   document.querySelector('#photo-caption').textContent = photo.caption;
   document.querySelector('#photo-counter').textContent = `${selectedPhoto + 1} / ${gallery.length}`;
 }
-viewer.querySelector('.photo-close').addEventListener('click', () => viewer.close());
-viewer.addEventListener('close', () =>
-  document.documentElement.classList.remove('photo-viewer-open'),
-);
-viewer
-  .querySelector('.photo-previous')
-  .addEventListener('click', () => showPhoto(selectedPhoto - 1));
-viewer.querySelector('.photo-next').addEventListener('click', () => showPhoto(selectedPhoto + 1));
+viewer.addEventListener('close', () => {
+  const image = viewer.querySelector('#photo-full');
+  if (image) image.style.transform = '';
+  document.documentElement.classList.remove('photo-viewer-open');
+});
+
+const photoImage = viewer.querySelector('#photo-full');
+let swipeGesture = null;
+let hasSwiped = false;
+
+viewer.addEventListener('pointerdown', (event) => {
+  swipeGesture = {
+    x: event.clientX,
+    y: event.clientY,
+    time: performance.now(),
+    id: event.pointerId,
+  };
+  hasSwiped = false;
+});
+
+viewer.addEventListener('pointermove', (event) => {
+  if (!swipeGesture || event.pointerId !== swipeGesture.id) return;
+  const dx = event.clientX - swipeGesture.x;
+  const dy = event.clientY - swipeGesture.y;
+  if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+    hasSwiped = true;
+    if (Math.abs(dx) > Math.abs(dy) && photoImage) {
+      photoImage.style.transform = `translateX(${dx * 0.4}px)`;
+    }
+  }
+});
+
+function handlePointerEnd(event) {
+  if (!swipeGesture || event.pointerId !== swipeGesture.id) return;
+  const dx = event.clientX - swipeGesture.x;
+  const dy = event.clientY - swipeGesture.y;
+  if (photoImage) photoImage.style.transform = '';
+
+  if (hasSwiped) {
+    if (Math.abs(dx) >= 32 && Math.abs(dx) > Math.abs(dy) * 1.1) {
+      // User requested: swipe right -> next, swipe left -> back
+      showPhoto(selectedPhoto + (dx > 0 ? 1 : -1));
+    } else if (Math.abs(dy) >= 60 && Math.abs(dy) > Math.abs(dx)) {
+      viewer.close();
+    }
+  } else {
+    // Tap / click without swiping
+    // Clicking backdrop or outside the photo image closes the viewer
+    if (event.target !== photoImage) {
+      viewer.close();
+    }
+  }
+  swipeGesture = null;
+  hasSwiped = false;
+}
+
+viewer.addEventListener('pointerup', handlePointerEnd);
+viewer.addEventListener('pointercancel', () => {
+  if (photoImage) photoImage.style.transform = '';
+  swipeGesture = null;
+  hasSwiped = false;
+});
+
 viewer.addEventListener('keydown', (event) => {
   if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
     event.preventDefault();
-    showPhoto(selectedPhoto + (event.key === 'ArrowLeft' ? -1 : 1));
+    showPhoto(selectedPhoto + (event.key === 'ArrowRight' ? 1 : -1));
+  } else if (event.key === 'Escape') {
+    viewer.close();
   }
-});
-viewer.addEventListener('click', (event) => {
-  if (event.target === viewer) viewer.close();
 });
 
 enableRobinerTheme();
