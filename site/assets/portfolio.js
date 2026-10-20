@@ -772,12 +772,20 @@ function renderPage({ partial = false } = {}) {
           <button
             type="button"
             id="sidebar-toggle"
-            class="sidebar-toggle"
+            class="sidebar-toggle card-nav__menu"
             aria-label="Open page menu"
             aria-expanded="false"
             aria-controls="portfolio-sidebar"
           >
-            <span class="sidebar-toggle-lines" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="card-nav__burger" aria-hidden="true">
+              <span class="card-nav__line card-nav__line--top"></span>
+              <span class="card-nav__line card-nav__line--bottom"></span>
+            </span>
+            <span class="card-nav__menu-label">
+              <span class="card-nav__word card-nav__word--open">Menu</span>
+              <span class="card-nav__word card-nav__word--close">Close</span>
+            </span>
+            <span class="sidebar-toggle-lines" style="display:none;" aria-hidden="true"><i></i><i></i><i></i></span>
           </button>
         </nav>
       </header>
@@ -801,12 +809,26 @@ function renderPage({ partial = false } = {}) {
         </button>
         <div class="sidebar-scroll-content">
           <p class="section-tracker-heading">robinersd</p>
-          <nav
-            id="sidebar-section-links"
-            class="section-tracker-links"
-            aria-label="Page sections"
-          ></nav>
-          ${renderCommunityPanel()}
+          <div class="card-nav__cards">
+            <div class="card-nav__card">
+              <div class="card-nav__card-head">
+                <span class="card-nav__label">Sections</span>
+                <p class="card-nav__description">Explore portfolio chapters & projects</p>
+              </div>
+              <nav
+                id="sidebar-section-links"
+                class="section-tracker-links card-nav__links"
+                aria-label="Page sections"
+              ></nav>
+            </div>
+            <div class="card-nav__card card-nav__card--community">
+              <div class="card-nav__card-head">
+                <span class="card-nav__label">Community</span>
+                <p class="card-nav__description">Live visitors, ratings & private feedback</p>
+              </div>
+              ${renderCommunityPanel()}
+            </div>
+          </div>
         </div>
       </aside>
       <div id="phone-section-indicator" class="phone-section-indicator" aria-hidden="true">
