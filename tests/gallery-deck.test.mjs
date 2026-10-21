@@ -189,8 +189,9 @@ test('phone deck retains rotation and keyboard selection; desktop shows every ca
   );
 });
 
-test('web project cards open with one desktop click or two phone taps and retain keyboard links', async () => {
-  for (const isDesktop of [false, true]) {
+test('web project cards open with one desktop/tablet click or two phone taps and retain keyboard links', async () => {
+  for (const width of [390, 699, 700, 744, 768, 820, 1280]) {
+    const isDesktop = width >= 700;
     const shell = new Element(),
       grid = new Element(),
       doc = new Element();
@@ -208,7 +209,10 @@ test('web project cards open with one desktop click or two phone taps and retain
     doc.querySelectorAll = () => [shell];
     const desktop = Object.assign(new Element(), { matches: isDesktop });
     const win = new Element();
-    win.matchMedia = () => desktop;
+    win.matchMedia = (query) => {
+      desktop.matches = width >= Number(query.match(/min-width:\s*(\d+)/)[1]);
+      return desktop;
+    };
     const api = await load(
       'project-deck.js',
       { document: doc, window: win, AbortController, performance },

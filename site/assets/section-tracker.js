@@ -7,7 +7,7 @@ export function enableSectionTracker() {
   if (!main || !panel || !toggle || !nav) return () => {};
   const root = document.documentElement;
   const header = document.querySelector('header');
-  const desktop = window.matchMedia('(min-width: 1024px)');
+  const desktop = window.matchMedia('(min-width: 700px)');
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const sections = [...main.querySelectorAll('[data-scroll-section]')];
   const home = Boolean(main.querySelector('#intro[data-scroll-section]'));

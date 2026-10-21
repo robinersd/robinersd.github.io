@@ -1,6 +1,6 @@
-// Pixel cover/reveal adapted from the supplied React Bits PixelTransition source.
-const GRID_COLUMNS = 10;
-const TRANSITION_MS = 240;
+// The costume breaks into small fragments carried right and upward by the wind.
+const GRID_COLUMNS = 40;
+const TRANSITION_MS = 13000;
 const DIRECTIONS = [
   'right',
   'down-right',
@@ -60,6 +60,23 @@ export function enableRobinerProfile() {
     ready(desired) ? desired : failed.has(desired) && ready('center') ? 'center' : null;
   const clearCanvas = () => context?.clearRect(0, 0, canvas.width, canvas.height);
 
+  function revealPortrait() {
+    let clip = '';
+    if (animation && canvas?.height && animation.progress < 1) {
+      const costume = photos.get('default');
+      const scale = Math.min(canvas.width / costume.naturalWidth, canvas.height / costume.naturalHeight);
+      const height = costume.naturalHeight * scale;
+      const top = canvas.height - height;
+      // Reveal only the area where the costume fragments have fully left.
+      // This prevents a wider face or shoulders showing through transparent margins.
+      const front = Math.max(0, Math.min(1, 1 - (animation.progress - 0.275) / 0.72));
+      clip = `inset(${((top + height * front) / canvas.height) * 100}% 0 0)`;
+    }
+    photos.forEach((image, name) => {
+      if (name !== 'default') image.style.clipPath = clip;
+    });
+  }
+
   function show(name) {
     current = name;
     photos.forEach((image, key) => {
@@ -67,30 +84,64 @@ export function enableRobinerProfile() {
     });
     portrait.dataset.pose = name;
     portrait.dataset.active = String(name !== 'default');
+    revealPortrait();
   }
 
   function draw() {
     clearCanvas();
     if (!context || !animation) return;
-    const covering = animation.progress < 0.5;
-    const local = covering ? animation.progress * 2 : animation.progress * 2 - 1;
+    revealPortrait();
+    const costume = photos.get('default');
+    // Match object-fit: contain and object-position: center bottom exactly.
+    const scale = Math.min(canvas.width / costume.naturalWidth, canvas.height / costume.naturalHeight);
+    const width = costume.naturalWidth * scale;
+    const height = costume.naturalHeight * scale;
+    const left = (canvas.width - width) * 0.5;
+    const top = canvas.height - height;
+    context.save();
+    context.drawImage(costume, left, top, width, height);
+    context.globalCompositeOperation = 'destination-out';
     const cell = canvas.width / GRID_COLUMNS;
     const rows = Math.ceil(canvas.height / cell);
-    context.fillStyle = '#ffffff';
+    const fragments = [];
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < GRID_COLUMNS; col++) {
-        if (local >= pixelNoise(col, row, animation.seed) !== covering) continue;
+        const noise = pixelNoise(col, row, animation.seed);
+        // Advance upward from the body to the face, relative to the image.
+        // Small edge noise softens the boundary without dissolving everything at once.
+        const depth = Math.max(0, Math.min(1, (row * cell - top) / height));
+        const start = (1 - depth) * 0.72 + noise * 0.025;
+        const travel = Math.min(1, Math.max(0, (animation.progress - start) / 0.25));
+        if (!travel) continue;
         const x = Math.round(col * cell),
           y = Math.round(row * cell);
         context.fillRect(x, y, Math.round((col + 1) * cell) - x, Math.round((row + 1) * cell) - y);
+        if (travel === 1) continue;
+        // Clip each source tile to the image, preserving transparent margins.
+        const sx = Math.max(x, left), sy = Math.max(y, top);
+        const sw = Math.min(x + cell, left + width) - sx;
+        const sh = Math.min(y + cell, top + height) - sy;
+        if (sw > 0 && sh > 0) fragments.push({ sx, sy, sw, sh, travel, noise });
       }
     }
+    context.globalCompositeOperation = 'source-over';
+    for (const { sx, sy, sw, sh, travel, noise } of fragments) {
+      const drift = canvas.width * (0.32 + noise * 0.28) * travel ** 1.25;
+      const lift = canvas.height * (0.1 + noise * 0.2) * travel;
+      const flutter = Math.sin(travel * Math.PI * 2 + noise * 6) * cell * travel;
+      context.globalAlpha = (1 - travel) ** 1.5;
+      context.drawImage(
+        costume, (sx - left) / scale, (sy - top) / scale, sw / scale, sh / scale,
+        sx + drift, sy - lift + flutter, sw, sh,
+      );
+    }
+    context.restore();
   }
 
   function start() {
     const next = available();
     if (!next) return; // Keep the last image while a cold image finishes loading.
-    if (reduced.matches || !context || (!animation && current !== 'default')) {
+    if (reduced.matches || !context || !ready('default') || (!animation && current !== 'default')) {
       cancelAnimationFrame(animationFrame);
       animationFrame = 0;
       animation = null;
@@ -98,12 +149,13 @@ export function enableRobinerProfile() {
       clearCanvas();
     } else if (!animation && current !== next) {
       animation = { to: next, progress: 0, started: null, seed: Math.floor(Math.random() * 65536) };
+      show(next);
+      draw();
       animationFrame = requestAnimationFrame(frame);
     } else if (animation) {
-      // Only the artwork reveal uses pixels. Follow the latest pose immediately,
-      // even while the first reveal is finishing, without another pixel burst.
+      // Retarget the portrait while the costume dissolves above it.
       animation.to = next;
-      if (animation.progress >= 0.5) show(next);
+      show(next);
     }
   }
 
@@ -112,7 +164,6 @@ export function enableRobinerProfile() {
     if (!animation) return;
     animation.started ??= now;
     animation.progress = Math.min(1, (now - animation.started) / TRANSITION_MS);
-    if (animation.progress >= 0.5) show(animation.to);
     draw();
     if (animation.progress < 1) animationFrame = requestAnimationFrame(frame);
     else {

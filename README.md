@@ -1,45 +1,38 @@
-# Portfolio
+# Robiner Dahap — Portfolio
 
-Responsive personal portfolio showcasing software projects, skills, education, recognition, and a photo gallery.
+Personal portfolio featuring projects, skills, education, recognition, and a photo gallery.
 
 ## Features
 
-- Profile name displayed as **Robiner Dahap** with a blue profile badge.
-- Spotify instruction with a typing animation, underscore cursor, and message bubble.
-- Contrasting message bubble: light in dark mode and dark in light mode.
-- Responsive profile artwork, interactive project cards, skill previews, and certificate viewer.
-- Open project live sites with a single desktop click or a double tap on phones. Swipe left or right through projects on phones.
-- Right-side page menu with clean text links and the current section highlighted while scrolling. It starts open on desktop and closed on phones.
-- Total visits, current viewers, and a public average star rating powered by Supabase. Written feedback stays private.
-- Work-inquiry email link with an envelope icon below the feedback button.
-- Floating portfolio assistant with a dedicated sidebar dock to keep contact details clear.
-- Portfolio and resume questions use shared public facts for skills, projects, education, awards and contact details, including on static hosting. General AI and attachment analysis require a connected AI service.
-- Portfolio questions are answered from the first message. The playful custom chat is reserved for casual messages such as greetings and small talk.
-- GitHub Pages forwards general AI requests to the portfolio's Vercel backend. Non-JSON backend failures display a readable message instead of a parsing error.
-- Remembered theme preference, keyboard navigation, and reduced-motion support.
-
-## Technology
-
-HTML, CSS, plain JavaScript, Node.js, and Supabase. The frontend requires no build step and has no runtime npm dependencies.
+- Responsive desktop, tablet, and phone layouts with light and dark themes.
+- Interactive portrait, project cards, gallery, and Spotify controls.
+- Portfolio assistant for questions about projects and skills.
+- Visitor statistics, ratings, and private written feedback.
+- Keyboard navigation and reduced-motion support.
 
 ## Run locally
 
-Use Node.js 22.9 or newer. From the project folder, run:
+Use Node.js 22.9 or newer:
 
-```powershell
+```sh
 npm run dev
 ```
 
-Open the address printed in the terminal. To preview on a phone, connect it to the same Wi-Fi and use the printed **Phone / LAN** address. Keep the local server running.
+Open the address printed in the terminal. For a phone preview, use the printed LAN address on the same Wi-Fi network.
 
-## Tests
+## Checks
 
-```powershell
+```sh
 node --test tests/*.test.mjs
+npm run typecheck:supabase
 ```
 
-## Publishing
+## Edit and publish
 
-The portfolio frontend supports GitHub Pages and Vercel. Vercel uses `site/` as the project root. Supabase provides the visitor and feedback backend independently of frontend hosting.
+- Content: `site/assets/data.js`
+- Page layouts: `site/assets/portfolio.js`
+- Styles: `site/assets/styles.css` and feature stylesheets
 
-Retain the included license and asset attribution notices when sharing the code.
+The frontend supports GitHub Pages and Vercel without a build step. Supabase database and Edge Function changes are deployed separately.
+
+See [Tech stack and sources](TECH-STACK-AND-SOURCES.md) for implementation details and credits. Keep the included license notices when distributing the code.

@@ -85,7 +85,7 @@
   flex-direction: column;
   overflow: hidden;
   overscroll-behavior: contain;
-  scrollbar-width: thin;
+  scrollbar-width: none;
   padding: 0;
   z-index: 12;
   color: var(--muted);
@@ -118,11 +118,11 @@
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  scrollbar-width: thin;
+  scrollbar-width: none;
   padding: 16px 10px calc(56px + env(safe-area-inset-bottom, 0px));
   scroll-padding-block: 12px 56px;
 }
-@media (max-width: 1023px) {
+@media (max-width: 699px) {
   :root.sidebar-open .robiner-chat,
   .portfolio-sidebar.is-mobile-open ~ .robiner-chat,
   .sidebar-open .robiner-chat {
@@ -194,7 +194,7 @@
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 700px) {
   #theme-toggle {
     position: fixed !important;
     top: 12px !important;
@@ -393,7 +393,7 @@
   }
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 699px) {
   .sidebar-toggle.card-nav__menu {
     display: inline-flex;
     align-items: center;
@@ -564,7 +564,7 @@
   }
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 699px) {
   :root {
     --phone-sidebar-width: clamp(144px, 32vw, 176px);
     --sidebar-width: var(--phone-sidebar-width);
@@ -693,4 +693,44 @@
     transition: none !important;
     animation: none !important;
   }
+}
+
+/* Tablets retain the desktop sidebar, with room for the main content. */
+@media (min-width: 700px) and (max-width: 1023px) {
+  :root { --sidebar-width: 192px; }
+  .portfolio-sidebar { width: 192px !important; }
+  .container {
+    width: calc(100% - 224px) !important;
+    margin-left: 208px !important;
+    margin-right: 16px !important;
+  }
+  .sidebar-scroll-content { padding-inline: 10px; }
+  .portfolio-sidebar .community-visit-pill { white-space: normal !important; }
+}
+
+/* Hide only the scrollbar chrome; wheel, touch and keyboard scrolling remain native. */
+.portfolio-sidebar,
+.sidebar-scroll-content {
+  -ms-overflow-style: none;
+}
+.portfolio-sidebar::-webkit-scrollbar,
+.sidebar-scroll-content::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Three-line phone menu remains recognizable when open or closed. */
+@media (max-width: 699px) {
+  .sidebar-toggle.card-nav__menu .card-nav__burger {
+    width: 20px;
+    height: 16px;
+  }
+  .sidebar-toggle.card-nav__menu .card-nav__line {
+    height: 2px;
+    transform: none;
+  }
+  .sidebar-toggle.card-nav__menu .card-nav__line--top { top: 0; }
+  .sidebar-toggle.card-nav__menu .card-nav__line--middle { top: 7px; }
+  .sidebar-toggle.card-nav__menu .card-nav__line--bottom { top: 14px; }
 }

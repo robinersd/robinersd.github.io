@@ -12,6 +12,15 @@ begin
       where n.nspname = 'public' and c.relname = table_name and c.relrowsecurity) then
       raise exception 'Missing RLS: %', table_name;
     end if;
+    if not exists (select 1 from pg_policies p where p.schemaname = 'public'
+      and p.tablename = table_name and p.policyname = table_name || '_backend_only'
+      and p.roles::text[] = array['service_role']::text[] and p.cmd = 'ALL') then
+      raise exception 'Missing backend-only policy: %', table_name;
+    end if;
+    if exists (select 1 from pg_policies p where p.schemaname = 'public'
+      and p.tablename = table_name and p.roles::text[] && array['public', 'anon', 'authenticated']::text[]) then
+      raise exception 'Unexpected visitor policy: %', table_name;
+    end if;
     foreach role_name in array array['anon', 'authenticated'] loop
       if has_table_privilege(role_name, 'public.' || table_name, 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') then
         raise exception 'Unexpected visitor table access: %, %', role_name, table_name;

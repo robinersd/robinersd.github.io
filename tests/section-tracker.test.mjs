@@ -71,7 +71,7 @@ class Element {
   }
 }
 
-async function setup({ home = true, reduced = false, desktop = false, animated = false } = {}) {
+async function setup({ home = true, reduced = false, desktop = false, animated = false, width } = {}) {
   const doc = new Element();
   const win = new Element();
   const root = new Element();
@@ -117,7 +117,11 @@ async function setup({ home = true, reduced = false, desktop = false, animated =
   };
   win.location = { pathname: home ? '/' : '/projects' };
   const media = Object.assign(new Element(), { matches: desktop });
-  win.matchMedia = (query) => (query.includes('min-width') ? media : { matches: reduced });
+  win.matchMedia = (query) => {
+    if (!query.includes('min-width')) return { matches: reduced };
+    if (width !== undefined) media.matches = width >= Number(query.match(/min-width:\s*(\d+)/)[1]);
+    return media;
+  };
   root.scrollHeight = 4500;
   const names = [
     'Intro',
@@ -231,6 +235,15 @@ test('the current section follows scrolling both ways, preserves focus and batch
     'Contact',
     'Short final sections still become current at the page bottom',
   );
+});
+
+test('tablet portrait widths use desktop navigation while phones start with a closed menu', async () => {
+  for (const width of [390, 699, 700, 744, 768, 820, 1024]) {
+    const h = await setup({ width });
+    assert.equal(h.tracker.hidden, width < 700, `initial navigation at ${width}px`);
+    assert.equal(h.tracker.inert, width < 700, `navigation is usable at ${width}px`);
+    h.stop();
+  }
 });
 
 test('section shortcuts clear the sticky header, keep the menu open and honor reduced motion', async () => {

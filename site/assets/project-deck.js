@@ -3,7 +3,7 @@ export function enableRobinerProjectDeck() {
   const lifecycle = new AbortController();
   const options = { signal: lifecycle.signal };
   const restore = [];
-  const desktop = window.matchMedia('(min-width: 900px)');
+  const desktop = window.matchMedia('(min-width: 700px)');
 
   document.querySelectorAll('[data-project-deck]').forEach((shell) => {
     const grid = shell.querySelector('.project-grid');

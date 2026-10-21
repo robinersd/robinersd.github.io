@@ -25,14 +25,14 @@ import {
   spotifyPlaylists,
   spotifyQueue,
   skillPreviews,
-} from './data.js?v=profile-copy-96';
+} from './data.js?v=fit-portrait-113';
 import { enableRobinerMotion } from './motion.js?v=chat-56';
-import { enableRobinerProjectDeck } from './project-deck.js?v=project-swipe-90';
-import { enableRobinerProfile } from './profile.js?v=profile-cutout-65';
+import { enableRobinerProjectDeck } from './project-deck.js?v=costume-tablet-106';
+import { enableRobinerProfile } from './profile.js?v=dissolve-13s-117';
 import { enableRobinerNavigation, basePath } from './navigation.js?v=v2-fix';
-import { renderPixelGallery, enablePixelGallery } from './pixel-gallery.js?v=quote-art-58';
+import { renderPixelGallery, enablePixelGallery } from './pixel-gallery.js?v=gallery-art-116';
 import { enableRobinerSpotify } from './spotify.js?v=spotify-activation-75';
-import { enableSectionTracker } from './section-tracker.js?v=sidebar-contact-85';
+import { enableSectionTracker } from './section-tracker.js?v=costume-tablet-106';
 import { enableTextType } from './text-type.js?v=spotify-hint-86';
 import {
   renderCommunityPanel,
@@ -155,7 +155,16 @@ function profilePortrait() {
       />`;
     })
     .join('');
-  return /* HTML */ `<button
+  return /* HTML */ `<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute;pointer-events:none">
+      <defs>
+        <filter id="profile-halftone" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+          <feImage x="0" y="0" width="3" height="3" result="dot"
+            href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='3' height='3'%3E%3Cpath fill='white' d='M0 0h3v3H0z'/%3E%3Ccircle cx='1.5' cy='1.5' r='.55' fill='black' opacity='.48'/%3E%3C/svg%3E" />
+          <feTile in="dot" result="dots" />
+          <feComposite in="SourceGraphic" in2="dots" operator="arithmetic" k1="1" k2="0" k3="0" k4="0" />
+        </filter>
+      </defs>
+    </svg><button
       class="profile-portrait pixelated-image-card"
       type="button"
       aria-label="${text(profile.name)} interactive profile photo"
@@ -165,9 +174,9 @@ function profilePortrait() {
       <canvas class="pixelated-image-card__pixels" aria-hidden="true"></canvas></button
     ><span id="profile-photo-help" class="visually-hidden"
       >Move your mouse, or tap and drag anywhere on the page, to make the portrait look toward you.
-      The artwork stays until you interact. Only the artwork reveal uses pixels; looking between
+      The costume stays until you interact, then dissolves into wind-blown fragments. Looking between
       directions switches instantly. With this photo focused, use the arrow keys to look around,
-      Enter for center, or Escape for the artwork.</span
+      Enter for center, or Escape for the costume.</span
     >`;
 }
 
@@ -701,7 +710,7 @@ function themeSwitch() {
         stroke="currentColor"
         stroke-width="1.8"
       >
-        <path d="M20 15.6A9 9 0 0 1 8.4 4 9 9 0 1 0 20 15.6Z" />
+        <path transform="translate(24 0) scale(-1 1)" d="M20 15.6A9 9 0 0 1 8.4 4 9 9 0 1 0 20 15.6Z" />
       </svg>
       <span class="theme-thumb"></span>
     </span>
@@ -776,6 +785,7 @@ function renderPage({ partial = false } = {}) {
           >
             <span class="card-nav__burger" aria-hidden="true">
               <span class="card-nav__line card-nav__line--top"></span>
+              <span class="card-nav__line card-nav__line--middle"></span>
               <span class="card-nav__line card-nav__line--bottom"></span>
             </span>
             <span class="card-nav__menu-label">

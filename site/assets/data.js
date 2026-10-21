@@ -7,7 +7,7 @@ export const profile = {
   email: 'dahaprobiner@gmail.com',
   github: 'https://github.com/robinersd',
   linkedin: 'https://www.linkedin.com/in/dahaprobiner',
-  defaultPhoto: '/assets/images/profile-rest.jpg',
+  defaultPhoto: '/assets/images/profile-spiderman-113.png',
   gazePhotos: {
     up: '/assets/images/profile-gaze/up.webp?v=profile-cutout-65',
     'up-right': '/assets/images/profile-gaze/up-right.webp?v=profile-cutout-65',

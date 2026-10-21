@@ -357,3 +357,17 @@ footer.container {
     transition: none;
   }
 }
+
+/* Compact sidebar feedback action on desktop and phone. */
+.portfolio-sidebar .community-panel .community-feedback-open {
+  width: fit-content !important;
+  max-width: 100%;
+  min-height: 30px !important;
+  height: 30px !important;
+  padding: 4px 12px !important;
+  font-size: 12px !important;
+  line-height: 1.4;
+  border-radius: 7px;
+  align-self: start;
+  justify-self: start;
+}
