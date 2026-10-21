@@ -25,8 +25,6 @@
 - Gallery trail: user-supplied PixelatedImageTrail reference, adapted to JavaScript and CSS.
 - Skills entrance: supplied StaggeredGrid reference credited to [Codrops demos](https://tympanus.net/codrops/demos/), implemented with native scroll progress and CSS.
 - Project expansion: supplied TeamRevealGrid reference, adapted to the current desktop project cards. Touch tablets display details without requiring hover.
-- Circular theme transition: inspired by [KB Jacalan](https://kbjacalan.vercel.app/), implemented with native View Transitions and a CSS fallback.
-- Spotify chooser: adapted from the supplied MusicPlayer reference. Playback uses the official Spotify API and remains subject to browser playback restrictions.
 
 These references are design sources; they do not add React or GSAP dependencies to the portfolio.
 
