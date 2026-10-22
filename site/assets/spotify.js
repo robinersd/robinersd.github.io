@@ -77,6 +77,64 @@ export function enableRobinerSpotify(playlists, defaultMusic = playlists[0]) {
     lastPosition = 0,
     lastDuration = 0;
 
+  let galleryHeld = false, galleryResume = false, gallerySilent = true;
+  let playCommandPending = false, parkedFallback = null;
+  const silenceListeners = new Set(), takeoverListeners = new Set(), silenceWaiters = new Set();
+  function reportGallerySilence(silent) {
+    gallerySilent = silent;
+    silenceListeners.forEach(listener => listener(silent));
+    if (silent) [...silenceWaiters].forEach(finish => finish(true));
+  }
+  function galleryTakeover() {
+    if (!galleryHeld) return;
+    galleryHeld = false;
+    galleryResume = false;
+    takeoverListeners.forEach(listener => listener());
+    [...silenceWaiters].forEach(finish => finish(false));
+    if (parkedFallback) { parkedFallback.frame.src = parkedFallback.src; parkedFallback = null; }
+  }
+  function suspendForGallery() {
+    if (!galleryHeld) {
+      galleryResume = !pauseRequested && (!paused || playCommandPending || playRequested);
+      galleryHeld = true;
+    }
+    clearTimeout(playAttemptTimer);
+    if (fallback) {
+      const frame = mount.querySelector('iframe');
+      if (frame && !parkedFallback) { parkedFallback = { frame, src: frame.src }; frame.src = 'about:blank'; }
+      reportGallerySilence(true);
+    } else if (controller && ready) {
+      reportGallerySilence(paused && !playCommandPending);
+      controller.pause();
+    } else reportGallerySilence(true); // Readiness cannot start playback while held.
+    if (gallerySilent) return Promise.resolve(true);
+    return new Promise(resolve => {
+      let timer;
+      const finish = silent => {
+        clearTimeout(timer);
+        silenceWaiters.delete(finish);
+        resolve(silent);
+      };
+      silenceWaiters.add(finish);
+      timer = setTimeout(() => finish(false), 1800);
+    });
+  }
+  function releaseGallery(resume = true) {
+    if (!galleryHeld) return;
+    const shouldResume = resume && galleryResume;
+    galleryHeld = false;
+    galleryResume = false;
+    [...silenceWaiters].forEach(finish => finish(false));
+    if (parkedFallback) {
+      parkedFallback.frame.src = parkedFallback.src;
+      parkedFallback = null;
+      return;
+    }
+    if (!shouldResume) { playRequested = false; return; }
+    if (ready && controller) requestPlayback(true);
+    else { playRequested = true; automaticRequest = true; }
+  }
+
   function reflectPlayback() {
     mini.classList.toggle('is-playing', ready && !paused && !buffering);
     mini.dataset.paused = String(paused);
@@ -164,6 +222,9 @@ export function enableRobinerSpotify(playlists, defaultMusic = playlists[0]) {
       .forEach((button) => button.setAttribute('aria-expanded', 'true'));
   }
   function stopMusic() {
+    galleryResume = false;
+    playCommandPending = false;
+    parkedFallback = null;
     initialAutoplayPending = false;
     position.hide();
     generation++;
@@ -178,6 +239,7 @@ export function enableRobinerSpotify(playlists, defaultMusic = playlists[0]) {
     selected = undefined;
     ready = false;
     paused = true;
+    reportGallerySilence(true);
     buffering = false;
     fallback = false;
     hasPlayed = false;
@@ -205,6 +267,7 @@ export function enableRobinerSpotify(playlists, defaultMusic = playlists[0]) {
     frame.referrerPolicy = 'strict-origin-when-cross-origin';
   }
   function selectPlaylist(index) {
+    galleryTakeover();
     initialAutoplayPending = false;
     useQueue = false;
     automaticRequest = false;
@@ -281,7 +344,14 @@ export function enableRobinerSpotify(playlists, defaultMusic = playlists[0]) {
           if (supersededTracks.has(data.playingURI)) return;
           const wasPaused = paused;
           paused = data.isPaused !== false;
+          playCommandPending = false;
           buffering = !!data.isBuffering;
+          if (galleryHeld) {
+            reportGallerySilence(paused);
+            if (!paused) created.pause();
+            reflectPlayback();
+            return;
+          }
           if (!paused) {
             initialAutoplayPending = false;
             if (wasPaused) pauseRequested = false;
@@ -296,6 +366,13 @@ export function enableRobinerSpotify(playlists, defaultMusic = playlists[0]) {
           if (controller !== created || !selected) return;
           if (supersededTracks.has(event?.data?.playingURI)) return;
           paused = false;
+          playCommandPending = false;
+          if (galleryHeld) {
+            reportGallerySilence(false);
+            created.pause();
+            reflectPlayback();
+            return;
+          }
           initialAutoplayPending = false;
           buffering = false;
           pauseRequested = false;
@@ -314,6 +391,11 @@ export function enableRobinerSpotify(playlists, defaultMusic = playlists[0]) {
       prepareFrame(frame, selected);
       mount.append(frame);
       fallback = true;
+      if (galleryHeld) {
+        parkedFallback = { frame, src: frame.src };
+        frame.src = 'about:blank';
+        reportGallerySilence(true);
+      }
       help.textContent =
         'Use the Spotify player controls to play or pause. Minimize to keep listening.';
       reflectPlayback();
@@ -325,7 +407,7 @@ export function enableRobinerSpotify(playlists, defaultMusic = playlists[0]) {
   }
 
   function fulfillPlayRequest() {
-    if (!playRequested || !ready || !controller) return;
+    if (galleryHeld || !playRequested || !ready || !controller) return;
     const automatic = automaticRequest;
     playRequested = false;
     automaticRequest = false;
@@ -334,6 +416,11 @@ export function enableRobinerSpotify(playlists, defaultMusic = playlists[0]) {
   }
 
   function requestPlayback(automatic = false) {
+    if (galleryHeld) {
+      if (automatic) return;
+      galleryTakeover();
+    }
+    playCommandPending = true;
     if (!automatic) initialAutoplayPending = false;
     pauseRequested = false;
     // PLAY initializes newly selected music; RESUME continues music that
@@ -354,6 +441,7 @@ export function enableRobinerSpotify(playlists, defaultMusic = playlists[0]) {
   }
 
   function advanceQueueAtEnd(data) {
+    if (galleryHeld) return;
     const previousPosition = lastPosition;
     const previousDuration = lastDuration;
     const position = Number(data.position);
@@ -396,6 +484,7 @@ export function enableRobinerSpotify(playlists, defaultMusic = playlists[0]) {
     expand();
   });
   function retryInitialAutoplay(event) {
+    if (galleryHeld) return;
     if (!event.isTrusted || !initialAutoplayPending) return;
     if (event.type === 'mousedown' && event.button !== 0) return;
     if (
@@ -446,6 +535,7 @@ export function enableRobinerSpotify(playlists, defaultMusic = playlists[0]) {
   });
   dialog.querySelector('.spotify-stop').addEventListener('click', stopMusic);
   toggle.addEventListener('click', () => {
+    galleryTakeover();
     initialAutoplayPending = false;
     if (fallback || needsNativePlay) {
       expand();
@@ -514,4 +604,17 @@ export function enableRobinerSpotify(playlists, defaultMusic = playlists[0]) {
   reflectPlayback();
   minimize();
   selectEntity(defaultTrack, true);
+  return {
+    suspendForGallery,
+    releaseGallery,
+    galleryIsSilent: () => galleryHeld && gallerySilent,
+    onGallerySilence(listener) {
+      silenceListeners.add(listener);
+      return () => silenceListeners.delete(listener);
+    },
+    onGalleryTakeover(listener) {
+      takeoverListeners.add(listener);
+      return () => takeoverListeners.delete(listener);
+    },
+  };
 }

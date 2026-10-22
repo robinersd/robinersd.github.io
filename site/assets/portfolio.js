@@ -25,13 +25,14 @@ import {
   spotifyPlaylists,
   spotifyQueue,
   skillPreviews,
-} from './data.js?v=fit-portrait-113';
+} from './data.js?v=gallery-photos-123';
 import { enableRobinerMotion } from './motion.js?v=chat-56';
 import { enableRobinerProjectDeck } from './project-deck.js?v=costume-tablet-106';
-import { enableRobinerProfile } from './profile.js?v=dissolve-13s-117';
+import { enableRobinerProfile } from './profile.js?v=profile-cycle-126';
 import { enableRobinerNavigation, basePath } from './navigation.js?v=v2-fix';
-import { renderPixelGallery, enablePixelGallery } from './pixel-gallery.js?v=gallery-art-116';
-import { enableRobinerSpotify } from './spotify.js?v=spotify-activation-75';
+import { renderPixelGallery, enablePixelGallery } from './pixel-gallery.js?v=gallery-cards-124';
+import { enableRobinerSpotify } from './spotify.js?v=gallery-video-120';
+import { enableGalleryVideo } from './gallery-video.js?v=gallery-edges-122';
 import { enableSectionTracker } from './section-tracker.js?v=costume-tablet-106';
 import { enableTextType } from './text-type.js?v=spotify-hint-86';
 import {
@@ -858,7 +859,7 @@ if (window.location.pathname.replace(/\/$/, '') === `${basePath}/experience`) {
 }
 renderPage();
 // The persistent player gets first access to the API already loading in <head>.
-enableRobinerSpotify(spotifyPlaylists, spotifyQueue);
+const spotifyPlayback = enableRobinerSpotify(spotifyPlaylists, spotifyQueue);
 
 // Native dialog provides focus trapping, Escape-to-close, and focus restoration.
 const viewer = document.querySelector('#photo-viewer');
@@ -950,6 +951,7 @@ let stopMotion;
 let stopProjectDeck;
 let stopProfile;
 let stopGallery;
+let stopGalleryVideo;
 let stopSkills;
 let stopResume;
 let stopDock;
@@ -980,9 +982,11 @@ function initializeMain({ pageEntry = false } = {}) {
   stopProjectDeck?.();
   stopProfile?.();
   stopGallery?.();
+  stopGalleryVideo?.();
   stopSkills?.();
   stopSkills = enableStaggeredSkills();
   stopGallery = enablePixelGallery(gallery, {
+    onDoubleTap: () => stopGalleryVideo?.togglePlayback?.(),
     onOpen: (index, tile) => {
       showPhoto(index);
       viewer.showModal();
@@ -1007,6 +1011,7 @@ function initializeMain({ pageEntry = false } = {}) {
     },
   });
 
+  stopGalleryVideo = enableGalleryVideo(spotifyPlayback);
   stopProfile = enableRobinerProfile();
   stopProjectDeck = enableRobinerProjectDeck();
   stopMotion = enableRobinerMotion({ pageEntry });

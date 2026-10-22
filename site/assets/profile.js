@@ -1,6 +1,8 @@
 // The costume breaks into small fragments carried right and upward by the wind.
 const GRID_COLUMNS = 40;
-const TRANSITION_MS = 13000;
+const DISSOLVE_MS = 3000;
+const REBUILD_MS = 4000;
+const IDLE_MS = 1500;
 const DIRECTIONS = [
   'right',
   'down-right',
@@ -46,7 +48,10 @@ export function enableRobinerProfile() {
     node.addEventListener(type, handler, { ...options, signal: lifecycle.signal });
   const failed = new Set();
   let current = 'default',
-    desired = 'default';
+    desired = 'hidden';
+  let introStarted = false;
+  let idleTimer = 0;
+  let costumeProgress = 0;
   let animation = null,
     animationFrame = 0,
     trackingFrame = 0;
@@ -61,19 +66,10 @@ export function enableRobinerProfile() {
   const clearCanvas = () => context?.clearRect(0, 0, canvas.width, canvas.height);
 
   function revealPortrait() {
-    let clip = '';
-    if (animation && canvas?.height && animation.progress < 1) {
-      const costume = photos.get('default');
-      const scale = Math.min(canvas.width / costume.naturalWidth, canvas.height / costume.naturalHeight);
-      const height = costume.naturalHeight * scale;
-      const top = canvas.height - height;
-      // Reveal only the area where the costume fragments have fully left.
-      // This prevents a wider face or shoulders showing through transparent margins.
-      const front = Math.max(0, Math.min(1, 1 - (animation.progress - 0.275) / 0.72));
-      clip = `inset(${((top + height * front) / canvas.height) * 100}% 0 0)`;
-    }
+    // Input reveals the portrait only behind the already-cleared costume area.
+    const reveal = animation ? Math.max(0, Math.min(1, (animation.progress - 0.2) / 0.72)) : 1;
     photos.forEach((image, name) => {
-      if (name !== 'default') image.style.clipPath = clip;
+      if (name !== 'default') image.style.clipPath = reveal < 1 ? `inset(${(1 - reveal) * 100}% 0 0)` : '';
     });
   }
 
@@ -83,7 +79,7 @@ export function enableRobinerProfile() {
       image.dataset.visible = String(key === name);
     });
     portrait.dataset.pose = name;
-    portrait.dataset.active = String(name !== 'default');
+    portrait.dataset.active = String(name !== 'default' && name !== 'hidden');
     revealPortrait();
   }
 
@@ -91,6 +87,7 @@ export function enableRobinerProfile() {
     clearCanvas();
     if (!context || !animation) return;
     revealPortrait();
+    if (animation.progress >= 1) return;
     const costume = photos.get('default');
     // Match object-fit: contain and object-position: center bottom exactly.
     const scale = Math.min(canvas.width / costume.naturalWidth, canvas.height / costume.naturalHeight);
@@ -139,43 +136,83 @@ export function enableRobinerProfile() {
   }
 
   function start() {
-    const next = available();
-    if (!next) return; // Keep the last image while a cold image finishes loading.
-    if (reduced.matches || !context || !ready('default') || (!animation && current !== 'default')) {
+    if (!introStarted) {
+      if (!ready('default') && !failed.has('default')) return;
+      introStarted = true;
+      show('hidden');
+      costumeProgress = 1;
+      if (!reduced.matches && context && ready('default')) {
+        animation = { progress: 0, from: 0, to: 1, duration: DISSOLVE_MS, started: performance.now(), seed: Math.floor(Math.random() * 65536) };
+        draw();
+        animationFrame = requestAnimationFrame(frame);
+      }
+    }
+    if (reduced.matches && animation) {
       cancelAnimationFrame(animationFrame);
       animationFrame = 0;
+      costumeProgress = animation.to;
       animation = null;
-      show(next);
       clearCanvas();
-    } else if (!animation && current !== next) {
-      animation = { to: next, progress: 0, started: null, seed: Math.floor(Math.random() * 65536) };
-      show(next);
-      draw();
-      animationFrame = requestAnimationFrame(frame);
-    } else if (animation) {
-      // Retarget the portrait while the costume dissolves above it.
-      animation.to = next;
-      show(next);
     }
+    const next = desired === 'hidden' || (desired === 'default' && animation) ? 'hidden' : available();
+    if (next) show(next);
   }
 
   function frame(now) {
     animationFrame = 0;
     if (!animation) return;
-    animation.started ??= now;
-    animation.progress = Math.min(1, (now - animation.started) / TRANSITION_MS);
+    const progress = Math.min(1, (now - animation.started) / animation.duration);
+    animation.progress = animation.from + (animation.to - animation.from) * progress;
+    costumeProgress = animation.progress;
     draw();
-    if (animation.progress < 1) animationFrame = requestAnimationFrame(frame);
+    if (progress < 1) animationFrame = requestAnimationFrame(frame);
     else {
       animation = null;
       clearCanvas();
-      start();
+      if (desired === 'default') show('default');
+      revealPortrait();
     }
   }
 
+  function transition(to) {
+    const from = animation?.progress ?? costumeProgress;
+    const seed = animation?.seed ?? Math.floor(Math.random() * 65536);
+    cancelAnimationFrame(animationFrame);
+    animationFrame = 0;
+    animation = null;
+    if (reduced.matches || !context || !ready('default') || Math.abs(to - from) < 0.001) {
+      costumeProgress = to;
+      clearCanvas();
+      return;
+    }
+    animation = { progress: from, from, to, started: performance.now(), duration: (to ? DISSOLVE_MS : REBUILD_MS) * Math.abs(to - from), seed };
+    draw();
+    animationFrame = requestAnimationFrame(frame);
+  }
+
+  function returnCostume() {
+    clearTimeout(idleTimer);
+    idleTimer = 0;
+    lastPoint = null;
+    cancelAnimationFrame(trackingFrame);
+    trackingFrame = 0;
+    desired = 'default';
+    show('hidden');
+    transition(0);
+    if (!animation) show('default');
+  }
+
+  function armReturn(delay = IDLE_MS) {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(returnCostume, delay);
+  }
+
   function request(name) {
+    clearTimeout(idleTimer);
     desired = photos.has(name) ? name : 'center';
+    if ((!animation && costumeProgress < 1) || animation?.to === 0) transition(1);
     start();
+    armReturn();
   }
 
   function track() {
@@ -192,18 +229,22 @@ export function enableRobinerProfile() {
     if (document.hidden || !Number.isFinite(x) || !Number.isFinite(y)) return;
     if (type === 'touch') lastTouch = performance.now();
     else if (type === 'mouse' && performance.now() - lastTouch < 700) return;
+    clearTimeout(idleTimer);
     lastPoint = { x, y, type };
     scheduleTrack();
   }
   function reset() {
+    if (!document.hidden) { returnCostume(); return; }
+    clearTimeout(idleTimer);
     lastPoint = null;
     desired = 'default';
     cancelAnimationFrame(trackingFrame);
     cancelAnimationFrame(animationFrame);
     trackingFrame = animationFrame = 0;
     animation = null;
-    show('default');
+    costumeProgress = 0;
     clearCanvas();
+    show('default');
   }
 
   photos.forEach((image, name) => {
@@ -244,6 +285,8 @@ export function enableRobinerProfile() {
   };
   listen(document, 'touchstart', touchPoint, { passive: true });
   listen(document, 'touchmove', touchPoint, { passive: true });
+  listen(document, 'touchend', event => { if (!event.touches.length) armReturn(800); }, { passive: true });
+  listen(document, 'pointerup', event => { if (event.pointerType === 'touch') armReturn(800); }, { passive: true });
   listen(document, 'pointerleave', (event) => {
     if (event.pointerType !== 'touch' && lastPoint?.type !== 'touch') reset();
   });
@@ -285,9 +328,19 @@ export function enableRobinerProfile() {
   observer.observe(portrait);
   resize();
   show('default');
+  start();
   return () => {
     lifecycle.abort();
     observer.disconnect();
-    reset();
+    clearTimeout(idleTimer);
+    cancelAnimationFrame(trackingFrame);
+    lastPoint = null;
+    desired = 'hidden';
+    show('hidden');
+    cancelAnimationFrame(animationFrame);
+    animationFrame = 0;
+    animation = null;
+    clearCanvas();
+    revealPortrait();
   };
 }

@@ -386,6 +386,51 @@ test('gallery removes thumbnails while retaining its bounded region', () => {
   const trail = renderPixelGallery(gallery, String);
   assert.match(trail, /data-pixel-gallery/);
   assert.doesNotMatch(trail, /data-gallery-photo|pixel-gallery-choices/);
+  assert.match(trail, /gallery-video-track/);
+  assert.match(trail, /gallery-video-viewport/);
+  assert.equal((trail.match(/<video /g) || []).length, 4);
+  assert.match(trail, /data-gallery-video-copy muted/);
+  assert.doesNotMatch(trail, /data-gallery-motion|Pause video|Mute sound/);
+});
+
+test('hover photos reach the gallery canvas below the shorter video strip', async () => {
+  const root = new Element(), layer = new Element(), doc = new Element(), reduced = new Element();
+  root.getBoundingClientRect = () => ({ left: 0, top: 0, width: 900, height: 560 });
+  root.nodes = new Map([['.pixel-gallery-layer', layer]]);
+  doc.querySelector = () => root;
+  doc.createElement = () => new Element();
+  doc.hidden = false;
+  reduced.matches = false;
+  class LoadedImage { set src(value) { this.onload(); } }
+  const api = await load('pixel-gallery.js', {
+    document: doc, matchMedia: () => reduced, AbortController, Image: LoadedImage,
+    performance: { now: () => 1000 }, ...clock(),
+  }, 'enablePixelGallery');
+  const stop = api.enablePixelGallery([{ image: '/photo.jpg' }]);
+  await root.emit('pointerenter', { pointerType: 'mouse', clientX: 450, clientY: 550 });
+  assert.equal(layer.children.length, 1);
+  const photo = layer.children[0];
+  assert.equal(parseFloat(photo.style.top) + parseFloat(photo.style.height), 560,
+    'Photo extends to the gallery bottom, beyond the centered 300px video ending at 430px');
+  stop();
+  assert.equal(layer.children.length, 0);
+});
+
+test('gallery double taps toggle video without opening a photo, while a single tap still opens it', async () => {
+  const root=new Element(), layer=new Element(), doc=new Element(), reduced=new Element();
+  root.nodes=new Map([['.pixel-gallery-layer',layer]]);doc.querySelector=()=>root;
+  doc.createElement=()=>new Element();doc.hidden=false;reduced.matches=false;
+  const timers=clock();let now=1000,toggles=0;const opens=[];
+  class LoadedImage{set src(value){this.onload();}}
+  const api=await load('pixel-gallery.js',{document:doc,matchMedia:()=>reduced,AbortController,Image:LoadedImage,performance:{now:()=>now},...timers},'enablePixelGallery');
+  const stop=api.enablePixelGallery([{image:'/one.jpg'}],{onOpen:index=>opens.push(index),onDoubleTap:()=>toggles++});
+  const tap=async(x=200,y=150)=>{await root.emit('pointerdown',{clientX:x,clientY:y,pointerType:'touch'});await root.emit('pointerup',{clientX:x,clientY:y,pointerType:'touch'});};
+  await tap();assert.equal(opens.length,0);
+  now+=160;await tap();assert.equal(toggles,1);assert.equal(opens.length,0);
+  assert.equal([...timers.timers.values()].filter(timer=>timer.delay===320).length,0);
+  now+=500;await tap();const [key,pending]=[...timers.timers.entries()].find(([,timer])=>timer.delay===320);timers.timers.delete(key);pending.callback();assert.equal(opens.length,1);
+  root.closest=()=>({});now+=500;await tap();assert.equal(toggles,1,'speaker control taps never toggle or open a photo');
+  stop();assert.equal(timers.timers.size,0);
 });
 
 test('phone trail remains inside its gallery, bounds active images and supports viewing', async () => {

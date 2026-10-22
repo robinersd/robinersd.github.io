@@ -28,6 +28,7 @@ const types = {
   '.jpeg': 'image/jpeg',
   '.png': 'image/png',
   '.webp': 'image/webp',
+  '.mp4': 'video/mp4',
   '.webmanifest': 'application/manifest+json',
 };
 
@@ -83,6 +84,33 @@ const server = http.createServer(async (request, response) => {
     if (request.headers['if-none-match'] === etag) {
       response.statusCode = 304;
       return response.end();
+    }
+    if (path.extname(resolved) === '.mp4') {
+      response.setHeader('Accept-Ranges', 'bytes');
+      const range = request.headers.range;
+      if (range && (!request.headers['if-range'] || request.headers['if-range'] === etag)) {
+        const match = /^bytes=(\d*)-(\d*)$/.exec(range);
+        const total = content.length;
+        let start = 0, end = total - 1;
+        if (!match || (!match[1] && !match[2])) start = -1;
+        else if (!match[1]) {
+          const suffix = Number(match[2]);
+          start = suffix > 0 ? Math.max(0, total - suffix) : -1;
+        } else {
+          start = Number(match[1]);
+          if (match[2]) end = Math.min(end, Number(match[2]));
+        }
+        if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 0 || start >= total || end < start) {
+          response.statusCode = 416;
+          response.setHeader('Content-Range', `bytes */${total}`);
+          return response.end();
+        }
+        response.statusCode = 206;
+        response.setHeader('Content-Range', `bytes ${start}-${end}/${total}`);
+        response.setHeader('Content-Length', end - start + 1);
+        return response.end(request.method === 'HEAD' ? undefined : content.subarray(start, end + 1));
+      }
+      response.setHeader('Content-Length', content.length);
     }
     response.end(request.method === 'HEAD' ? undefined : content);
   } catch (error) {

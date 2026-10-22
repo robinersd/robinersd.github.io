@@ -4,16 +4,30 @@ export function renderPixelGallery(photos, escape) {
     typeof window !== 'undefined' && window.location?.pathname?.startsWith('/myportfolio')
       ? '/myportfolio'
       : '';
-  return `<div class="pixel-gallery-zone" data-pixel-gallery tabindex="0" role="region" aria-label="Interactive gallery image trail. Move or swipe to explore">
-    <div class="pixel-gallery-backdrop" aria-hidden="true">
-      <img src="${base}/assets/images/gallery/gallery-bubble-116.png" alt="Quote: With god all things are possible. Mathew 19:26" class="pixel-gallery-quote-img" loading="eager" decoding="async" />
+  return `<div class="pixel-gallery-zone" data-pixel-gallery tabindex="0" role="region" aria-label="Interactive gallery. Move or swipe to explore photos; double tap or press Space to pause or play the video">
+    <div class="gallery-video-viewport" aria-hidden="true">
+      <div class="gallery-video-track">
+      ${Array.from({ length: 4 }, (_, index) => `<video class="pixel-gallery-video" ${index === 0 ? 'data-gallery-video' : 'data-gallery-video-copy'} muted loop playsinline preload="none" aria-hidden="true" tabindex="-1">
+        <source src="${base}/assets/video/gallery-background-120.mp4" type="video/mp4" />
+      </video>`).join('')}
+      </div>
     </div>
     <div class="pixel-gallery-layer" aria-hidden="true"></div>
+    <div class="gallery-video-controls" data-gallery-video-controls>
+      <button type="button" data-gallery-sound data-muted="true" aria-label="Enable gallery video sound" aria-pressed="false" title="Enable sound">
+        <svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M11 5 6 9H3v6h3l5 4V5Z" />
+          <g class="gallery-sound-on"><path d="M15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14" /></g>
+          <g class="gallery-sound-off"><path d="m16 9 5 6m0-6-5 6" /></g>
+        </svg>
+      </button>
+    </div>
+    <span class="visually-hidden" data-gallery-video-status role="status"></span>
   </div>
 `;
 }
 
-export function enablePixelGallery(photos, { onOpen } = {}) {
+export function enablePixelGallery(photos, { onOpen, onDoubleTap } = {}) {
   const root = document.querySelector('[data-pixel-gallery]');
   if (!root || !photos.length) return;
   const layer = root.querySelector('.pixel-gallery-layer');
@@ -30,6 +44,7 @@ export function enablePixelGallery(photos, { onOpen } = {}) {
   let current = null;
   let lastSpawn = null;
   let touchStart = null;
+  let pendingTap = null, lastTap = null;
   photos.forEach((photo, index) => {
     const image = new Image();
     image.onload = () => {
@@ -46,6 +61,8 @@ export function enablePixelGallery(photos, { onOpen } = {}) {
     if (index >= 0) entries.splice(index, 1);
   }
   function clear() {
+    clearTimeout(pendingTap);
+    pendingTap = lastTap = null;
     cancelAnimationFrame(frame);
     frame = 0;
     entries.slice().forEach(remove);
@@ -146,6 +163,7 @@ export function enablePixelGallery(photos, { onOpen } = {}) {
       frame = requestAnimationFrame(move);
   }
   function update(event, immediate = false) {
+    if (event.target?.closest?.('[data-gallery-video-controls]')) return;
     const bounds = root.getBoundingClientRect();
     pointer = {
       x: Math.max(0, Math.min(bounds.width, event.clientX - bounds.left)),
@@ -168,6 +186,11 @@ export function enablePixelGallery(photos, { onOpen } = {}) {
   root.addEventListener(
     'pointerdown',
     (event) => {
+      if (event.target?.closest?.('[data-gallery-video-controls]')) {
+        clearTimeout(pendingTap);
+        pendingTap = lastTap = null;
+        return;
+      }
       touchStart = { x: event.clientX, y: event.clientY };
       update(event, true);
     },
@@ -185,8 +208,24 @@ export function enablePixelGallery(photos, { onOpen } = {}) {
   root.addEventListener(
     'pointerup',
     (event) => {
-      if (touchStart && Math.hypot(event.clientX - touchStart.x, event.clientY - touchStart.y) <= 8)
-        onOpen?.(selected, root);
+      if (event.target?.closest?.('[data-gallery-video-controls]')) { touchStart = null; return; }
+      if (touchStart && Math.hypot(event.clientX - touchStart.x, event.clientY - touchStart.y) <= 8) {
+        if (!onDoubleTap) onOpen?.(selected, root);
+        else {
+          const now = performance.now();
+          const point = { x: event.clientX, y: event.clientY, time: now };
+          if (lastTap && now - lastTap.time <= 320 && Math.hypot(point.x - lastTap.x, point.y - lastTap.y) <= 24) {
+            clearTimeout(pendingTap);
+            pendingTap = lastTap = null;
+            onDoubleTap();
+          } else {
+            clearTimeout(pendingTap);
+            lastTap = point;
+            const index = selected;
+            pendingTap = setTimeout(() => { pendingTap = lastTap = null; onOpen?.(index, root); }, 320);
+          }
+        }
+      }
       touchStart = null;
     },
     options,
@@ -196,6 +235,7 @@ export function enablePixelGallery(photos, { onOpen } = {}) {
   root.addEventListener(
     'keydown',
     (event) => {
+      if (event.target?.closest?.('[data-gallery-video-controls]')) return;
       if (['ArrowLeft', 'ArrowRight'].includes(event.key)) {
         event.preventDefault();
         next += event.key === 'ArrowRight' ? 1 : Math.max(1, ready.length - 1);

@@ -5,7 +5,7 @@ Personal portfolio featuring projects, skills, education, recognition, and a pho
 ## Features
 
 - Responsive desktop, tablet, and phone layouts with light and dark themes.
-- Interactive portrait, project cards, gallery, and Spotify controls.
+- Interactive portrait, project cards, video-backed gallery, and Spotify controls.
 - Portfolio assistant for questions about projects and skills.
 - Visitor statistics, ratings, and private written feedback.
 - Keyboard navigation and reduced-motion support.

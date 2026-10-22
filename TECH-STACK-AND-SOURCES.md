@@ -13,12 +13,14 @@
 ## Current interface
 
 - Desktop and tablet navigation uses a fixed sidebar. Phones use a three-line menu with the sidebar initially closed. Its scrollbar is hidden while scrolling remains available.
-- The transparent portrait has a color-preserving halftone texture. Its wind dissolve lasts **13 seconds**, advancing upward from the body to the face. The real portrait is revealed behind the cleared area to avoid overlap.
+- The transparent portrait has a color-preserving halftone texture. Its upward costume dissolve lasts **5 seconds**. The normal portrait opens during that dissolve and finishes its eased reveal at **8 seconds**, with no blank waiting phase.
 - Project links open with one desktop/tablet click or two phone taps. Phone cards also support swiping.
-- The gallery uses a bounded image trail and compact image viewer. Its decorative bubble no longer includes the large quotation marks.
+- The gallery uses a viewport-wide looping MP4 marquee moving right to left behind its bounded image trail. It reaches the right screen edge and clips at the fixed sidebar boundary, with full-width playback on phones. Two synchronized copies keep the horizontal loop filled, with only one audio source. Double tap or Space toggles playback; a small background-free speaker icon controls sound. Visible gallery playback temporarily suspends Spotify; the speaker control provides browser-autoplay recovery. The video pauses offscreen or in hidden tabs, and the quote sticker is removed.
 - Themes, keyboard controls, visibility handling, and reduced-motion preferences are implemented locally.
 
 ## Design references and attribution
+
+- Gallery video marquee: [Aceternity Infinite Moving Cards](https://ui.aceternity.com/components/infinite-moving-cards), adapted to a continuous CSS track without React dependencies.
 
 - Profile interaction: [Bryll Lim](https://bryllim.com/). The initial reveal implementation was adapted from the supplied [React Bits PixelTransition](https://reactbits.dev/animations/pixel-transition) reference; the current wind dissolve uses native Canvas.
 - Star background: [Aceternity UI Shooting Stars](https://ui.aceternity.com/components/shooting-stars-and-stars-background), adapted to bounded native Canvas rendering.

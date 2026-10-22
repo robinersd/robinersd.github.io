@@ -117,7 +117,7 @@ async function setup({ desktop = true, loading = false } = {}) {
   });
   vm.runInContext(source + '\nglobalThis.enable = enableRobinerSpotify;', context);
   const track = { id: 'a'.repeat(22), title: 'Default music', type: 'track' };
-  context.enable([{ ...track, id: 'b'.repeat(22) }], [track]);
+  const playback = context.enable([{ ...track, id: 'b'.repeat(22) }], [track]);
   const flush = () => new Promise((resolve) => setImmediate(resolve));
   await flush();
   return {
@@ -126,6 +126,7 @@ async function setup({ desktop = true, loading = false } = {}) {
     wave,
     playlist,
     calls,
+    playback,
     timers,
     ready: () => events.get('ready')(),
     playing: () => events.get('playback_started')(),
@@ -273,4 +274,43 @@ test('a restricted page-initiated retry retains the official player recovery via
   assert.equal(h.dialog.modal, false, 'Failure does not interrupt the page with a modal');
   h.wave.emit('click');
   assert.equal(h.dialog.modal, true, 'The visitor can reach Spotify native Play if required');
+});
+
+test('gallery waits for Spotify pause acknowledgement and resumes only previously requested music', async () => {
+  const h=await setup();h.ready();h.playing();
+  const held=h.playback.suspendForGallery();
+  assert.equal(h.calls.pause,1);
+  assert.equal(h.playback.galleryIsSilent(),false);
+  h.paused();assert.equal(await held,true);
+  h.doc.emit('click');assert.equal(h.calls.resume,0,'page gestures cannot restart held music');
+  h.playback.releaseGallery();assert.equal(h.calls.resume,1);
+  h.playing();h.wave.emit('click');h.paused();
+  await h.playback.suspendForGallery();h.playback.releaseGallery();
+  assert.equal(h.calls.resume,1,'a manual Spotify pause stays paused after the gallery');
+});
+
+test('gallery prevents delayed Spotify initialization from autoplaying until release', async () => {
+  const h=await setup({loading:true});await h.playback.suspendForGallery();
+  await h.load();h.ready();assert.equal(h.calls.play,0);
+  h.playback.releaseGallery();assert.equal(h.calls.play,1);
+});
+
+test('explicit music takeover notifies the gallery before resuming and stopping cancels automatic resume', async () => {
+  const h=await setup();h.ready();h.playing();
+  let takeover=0;h.playback.onGalleryTakeover(()=>{takeover++;assert.equal(h.calls.resume,0);});
+  let held=h.playback.suspendForGallery();h.paused();await held;
+  h.wave.emit('click');assert.equal(takeover,1);assert.equal(h.calls.resume,1);
+  h.playing();held=h.playback.suspendForGallery();h.paused();await held;
+  h.dialog.querySelector('.spotify-stop').emit('click');
+  h.playback.releaseGallery();assert.equal(h.calls.resume,1);
+});
+
+test('late Spotify playback while held is immediately paused and reports unsafe audio', async () => {
+  const h=await setup();h.ready();h.playing();
+  const held=h.playback.suspendForGallery();h.paused();await held;
+  const states=[];h.playback.onGallerySilence(value=>states.push(value));
+  const pauses=h.calls.pause;h.playing();assert.equal(h.calls.pause,pauses+1);
+  assert.equal(states.at(-1),false);
+  h.paused();assert.equal(states.at(-1),true);
+  h.playback.releaseGallery(false);assert.equal(h.calls.resume,0);
 });

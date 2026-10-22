@@ -74,6 +74,7 @@ async function harness({ reducedMotion = false, canvasAvailable = true } = {}) {
     id = 0,
     observerDisconnected = false;
   const tasks = new Map();
+  const timers = new Map();
   const source = (
     await fs.readFile(new URL('../site/assets/profile.js', import.meta.url), 'utf8')
   ).replaceAll('export function', 'function');
@@ -83,6 +84,8 @@ async function harness({ reducedMotion = false, canvasAvailable = true } = {}) {
     matchMedia: () => reduced,
     devicePixelRatio: 3,
     performance: { now: () => clock },
+    setTimeout: (callback, delay) => { timers.set(++id, { callback, delay }); return id; },
+    clearTimeout: key => timers.delete(key),
     AbortController: class extends AbortController {
       constructor() {
         super();
@@ -125,6 +128,8 @@ async function harness({ reducedMotion = false, canvasAvailable = true } = {}) {
     win,
     reduced,
     tasks,
+    timers,
+    idle() { const pending = [...timers.values()]; timers.clear(); pending.forEach(timer => timer.callback()); },
     pixels,
     draws,
     composites,
@@ -138,12 +143,12 @@ async function harness({ reducedMotion = false, canvasAvailable = true } = {}) {
   };
 }
 
-test('profile starts as art; all eight sectors and center are relative to the portrait', async () => {
+test('reduced motion skips the intro and waits for input; all eight sectors and center are relative to the portrait', async () => {
   const h = await harness({ reducedMotion: true });
-  assert.equal(h.portrait.dataset.pose, 'default');
+  assert.equal(h.portrait.dataset.pose, 'hidden');
   assert.equal(h.tasks.size, 0);
   h.doc.emit('robiner-theme-change');
-  assert.equal(h.portrait.dataset.pose, 'default');
+  assert.equal(h.portrait.dataset.pose, 'hidden');
   const rect = h.portrait.rect;
   const cx = rect.left + rect.width / 2,
     cy = rect.top + rect.height * 0.45;
@@ -200,7 +205,7 @@ test('wind fragments drift right, fade, stay bottom-aligned and finish without i
   const base = h.draws[0];
   assert.equal(base[2] + base[4], h.canvas.height, 'costume touches the frame bottom');
   h.advance();
-  h.advance(2080);
+  h.advance(800);
   const particles = h.draws.filter(draw => draw.length === 9);
   assert.ok(particles.length > 0, 'draw fragments from the actual costume');
   const scale = h.canvas.width / h.photos.get('default').naturalWidth;
@@ -217,12 +222,12 @@ test('dissolve begins at the bottom and advances upward to the face, not all at 
   h.point(600, 163);
   h.advance();
   h.advance();
-  h.advance(2080);
+  h.advance(480);
   const early = h.draws.filter(draw => draw.length === 9);
   assert.ok(early.length > 0);
   assert.ok(early.every(draw => draw[2] > h.photos.get('default').naturalHeight * 0.65), 'only lower body fragments start early');
   h.draws.length = 0;
-  h.advance(5720);
+  h.advance(1200);
   const later = h.draws.filter(draw => draw.length === 9);
   assert.ok(later.some(draw => draw[2] < h.photos.get('default').naturalHeight * 0.5), 'front moves upward toward the face');
   assert.ok(later.every(draw => draw[2] > h.photos.get('default').naturalHeight * 0.1), 'top remains intact until the front reaches it');
@@ -231,15 +236,36 @@ test('dissolve begins at the bottom and advances upward to the face, not all at 
   h.cleanup();
 });
 
-test('wind dissolve stays active until 13 seconds and then stops', async () => {
+test('visit dissolves automatically in three seconds and waits for mouse input', async () => {
   const h = await harness();
-  h.point(600, 163);
-  h.advance();
-  h.advance();
-  h.advance(12999);
-  assert.ok(h.tasks.size > 0, 'still dissolving before 13 seconds');
+  assert.ok(h.draws.length > 0, 'costume is drawn without input');
+  assert.equal(h.portrait.dataset.pose, 'hidden');
+  h.advance(2999);
+  assert.ok(h.tasks.size > 0);
+  assert.ok([...h.photos.values()].every(image => image.dataset.visible === 'false'));
   h.advance(1);
-  assert.equal(h.tasks.size, 0, 'finished at 13 seconds');
+  assert.equal(h.tasks.size, 0, 'automatic intro ends at three seconds');
+  h.point(600, 163); h.advance();
+  assert.equal(h.portrait.dataset.pose, 'right');
+  assert.equal(h.photos.get('right').style.clipPath, '');
+  assert.equal(h.tasks.size, 0, 'input immediately reveals the directional photo');
+  const draws = h.draws.length;
+  h.doc.emit('pointerleave', { pointerType: 'mouse' });
+  assert.equal(h.portrait.dataset.pose, 'hidden');
+  h.point(-300, 163); h.advance();
+  assert.equal(h.portrait.dataset.pose, 'left');
+  assert.ok(h.draws.length > draws, 'leaving begins reconstruction and input reverses it');
+  h.cleanup();
+});
+
+test('phone tap after the automatic intro immediately reveals and follows the portrait', async () => {
+  const h = await harness(); h.advance(3000);
+  assert.equal(h.portrait.dataset.pose, 'hidden');
+  h.point(600, 163, 'touch', 'pointerdown'); h.advance();
+  assert.equal(h.portrait.dataset.pose, 'right');
+  h.doc.emit('touchmove', { touches: [{ clientX: 156, clientY: 700 }] }); h.advance();
+  assert.equal(h.portrait.dataset.pose, 'down');
+  assert.equal(h.tasks.size, 0);
   h.cleanup();
 });
 
@@ -249,13 +275,13 @@ test('the real face and shoulders remain concealed until the upward dissolve rea
   h.advance();
   h.advance();
   assert.equal(h.photos.get('right').style.clipPath, 'inset(100% 0 0)');
-  h.advance(6500);
+  h.advance(700);
   const halfway = Number(h.photos.get('right').style.clipPath.match(/[\d.]+/)[0]);
   assert.ok(halfway > 50 && halfway < 100, 'only the bottom is revealed halfway through');
   h.point(-300, 163);
   h.advance();
   assert.ok(Number(h.photos.get('left').style.clipPath.match(/[\d.]+/)[0]) > 50, 'retargeting cannot expose the whole face');
-  h.advance(6500);
+  h.advance(6000);
   assert.equal(h.photos.get('left').style.clipPath, '', 'full portrait restored after completion');
   h.win.emit('blur');
   assert.equal(h.photos.get('right').style.clipPath, '', 'reset clears old clipping');
@@ -283,7 +309,7 @@ test('only the artwork reveal uses pixels; following poses switch in the next in
   h.win.emit('blur');
   h.point(156, 700);
   h.settle();
-  assert.ok(h.pixels.length > firstRevealPixels, 'returning from artwork still uses its reveal');
+  assert.ok(h.pixels.length > firstRevealPixels, 'returning input reverses the rebuilding costume');
   h.cleanup();
 });
 
@@ -328,7 +354,7 @@ test('slow and failed photos never replace the current image with an empty layer
   right.naturalWidth = 0;
   h.point(600, 163);
   h.advance();
-  assert.equal(h.portrait.dataset.pose, 'default');
+  assert.equal(h.portrait.dataset.pose, 'hidden');
   right.complete = true;
   right.naturalWidth = 480;
   right.emit('load');
@@ -353,7 +379,7 @@ test('offscreen input avoids animation; scroll recomputes direction when the pho
   h.portrait.rect = { ...h.portrait.rect, top: -200, bottom: -60 };
   h.point(156, 700);
   h.advance();
-  assert.equal(h.portrait.dataset.pose, 'default');
+  assert.equal(h.portrait.dataset.pose, 'hidden');
   assert.equal(h.tasks.size, 0);
   h.portrait.rect = { ...h.portrait.rect, top: 100, bottom: 240 };
   h.win.emit('scroll');
@@ -379,6 +405,53 @@ test('keyboard controls and no-canvas fallback remain usable; hiding cancels pen
   h.cleanup();
 });
 
+test('idle rebuilds Spider-Man from head to body in four seconds, then repeats on input', async () => {
+  const h = await harness();
+  h.advance(3000);
+  h.point(600, 163); h.advance();
+  assert.equal([...h.timers.values()][0].delay, 1500);
+  h.idle();
+  h.draws.length = 0;
+  h.advance(1000);
+  let fragments = h.draws.filter(draw => draw.length === 9);
+  assert.ok(fragments.length > 0);
+  assert.ok(fragments.every(draw => draw[2] < 240), 'head fragments rebuild first');
+  h.draws.length = 0;
+  h.advance(2000);
+  fragments = h.draws.filter(draw => draw.length === 9);
+  assert.ok(fragments.some(draw => draw[2] > 240), 'reconstruction reaches the body later');
+  h.advance(999);
+  assert.ok(h.tasks.size > 0);
+  h.advance(1);
+  assert.equal(h.portrait.dataset.pose, 'default');
+  assert.equal(h.tasks.size, 0);
+  h.point(-300, 163); h.advance();
+  assert.equal(h.portrait.dataset.pose, 'left');
+  h.advance(3000);
+  assert.equal(h.photos.get('left').style.clipPath, '');
+  h.idle(); h.advance(4000);
+  assert.equal(h.portrait.dataset.pose, 'default', 'cycle can repeat');
+  h.cleanup();
+  assert.equal(h.timers.size, 0);
+});
+
+test('phone release schedules rebuild; a new tap cancels that return and reverses an active rebuild', async () => {
+  const h = await harness(); h.advance(3000);
+  h.point(600, 163, 'touch', 'pointerdown'); h.advance();
+  h.doc.emit('touchend', { touches: [] });
+  assert.equal([...h.timers.values()][0].delay, 800);
+  h.point(156, 700, 'touch', 'pointerdown'); h.advance();
+  assert.equal(h.timers.size, 1, 'only the newest return timer survives');
+  assert.equal([...h.timers.values()][0].delay, 1500);
+  h.idle(); h.advance(2000);
+  h.point(156, -200, 'touch', 'pointerdown'); h.advance();
+  assert.equal(h.portrait.dataset.pose, 'up');
+  h.advance(3000);
+  assert.equal(h.photos.get('up').style.clipPath, '');
+  assert.equal(h.tasks.size, 0);
+  h.cleanup();
+});
+
 test('route cleanup removes all input listeners and animation work', async () => {
   const h = await harness();
   h.point(600, 163);
@@ -387,7 +460,7 @@ test('route cleanup removes all input listeners and animation work', async () =>
   h.point(-300, 163);
   h.doc.emit('touchmove', { touches: [{ clientX: 156, clientY: 700 }] });
   h.settle();
-  assert.equal(h.portrait.dataset.pose, 'default');
+  assert.equal(h.portrait.dataset.pose, 'hidden');
   assert.equal(h.tasks.size, 0);
   assert.equal(h.observerDisconnected(), true);
 });

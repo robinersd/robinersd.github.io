@@ -165,6 +165,31 @@ export const gallery = [
     caption: 'Engineering community',
     alt: 'A group holding their Computer Engineering membership cards',
   },
+  {
+    image: '/assets/images/gallery/classmates-blue-room-123.jpg',
+    caption: 'Classmates and memories',
+    alt: 'A group selfie with classmates in a blue room',
+  },
+  {
+    image: '/assets/images/gallery/electronics-led-test-123.jpg',
+    caption: 'Electronics in progress',
+    alt: 'Breadboards, connected circuit boards and illuminated LEDs on a project table',
+  },
+  {
+    image: '/assets/images/gallery/project-session-123.jpg',
+    caption: 'Working together',
+    alt: 'A group working around a laptop during a project session',
+  },
+  {
+    image: '/assets/images/gallery/electronics-workbench-123.jpg',
+    caption: 'Building and testing',
+    alt: 'A laptop beside breadboard circuits and electronic components on a worktable',
+  },
+  {
+    image: '/assets/images/gallery/classmates-outing-123.jpg',
+    caption: 'A break with classmates',
+    alt: 'A group selfie with classmates holding ice cream in a shopping mall',
+  },
 ];
 
 export const resumePages = ['/assets/images/resume-page-1.png', '/assets/images/resume-page-2.png'];
