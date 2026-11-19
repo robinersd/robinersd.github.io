@@ -24,10 +24,14 @@ export function enableRobinerSpotifyPosition(dialog) {
     const playerHeight = dialog.offsetHeight;
     let minX = left + margin;
     const sidebar = document.querySelector?.('#portfolio-sidebar');
-    if (sidebar && !sidebar.hidden && width >= 1024) {
-      const sbRect = sidebar.getBoundingClientRect?.();
-      if (sbRect && sbRect.right > left && sbRect.width > 50) {
-        minX = Math.max(minX, Math.round(sbRect.right + margin));
+    const sidebarOpen =
+      sidebar &&
+      width >= 700 &&
+      (document.documentElement.classList?.contains?.('sidebar-open') ?? !sidebar.hidden);
+    if (sidebarOpen) {
+      const sbWidth = sidebar.offsetWidth || (width >= 1024 ? 244 : 192);
+      if (sbWidth > 50) {
+        minX = Math.max(minX, Math.round(left + sbWidth + margin));
       }
     }
     let minY = top + margin;
@@ -270,6 +274,7 @@ export function enableRobinerSpotifyPosition(dialog) {
     queue();
   };
   window.addEventListener('resize', resize, { passive: true });
+  window.addEventListener('robiner:sidebar-toggle', queue);
   window.addEventListener(
     'scroll',
     () => {

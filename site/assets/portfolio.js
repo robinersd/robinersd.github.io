@@ -31,8 +31,8 @@ import { enableRobinerProjectDeck } from './project-deck.js?v=costume-tablet-106
 import { enableRobinerProfile } from './profile.js?v=profile-cycle-126';
 import { enableRobinerNavigation, basePath } from './navigation.js?v=v2-fix';
 import { renderPixelGallery, enablePixelGallery } from './pixel-gallery.js?v=no-gallery-video-127';
-import { enableRobinerSpotify } from './spotify.js?v=no-autoplay-127';
-import { enableSectionTracker } from './section-tracker.js?v=desktop-menu-127';
+import { enableRobinerSpotify } from './spotify.js?v=sidebar-sync-129';
+import { enableSectionTracker } from './section-tracker.js?v=sidebar-sync-129';
 import { enableTextType } from './text-type.js?v=spotify-hint-86';
 import {
   renderCommunityPanel,

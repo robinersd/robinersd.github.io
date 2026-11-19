@@ -226,6 +226,9 @@
     color: var(--ink) !important;
     cursor: pointer !important;
     pointer-events: auto !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -webkit-tap-highlight-color: transparent !important;
     z-index: 110 !important;
   }
   .sidebar-toggle:hover {
@@ -321,9 +324,9 @@
   }
   .container {
     width: min(calc(100vw - 48px), 780px) !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    transition: margin-left 260ms cubic-bezier(.22, 1, .36, 1), width 260ms cubic-bezier(.22, 1, .36, 1);
+    margin-left: max(24px, calc((100vw - 780px) / 2)) !important;
+    margin-right: max(24px, calc((100vw - 780px) / 2)) !important;
+    transition: margin-left 280ms cubic-bezier(.22, 1, .36, 1), width 280ms cubic-bezier(.22, 1, .36, 1);
   }
   :root.sidebar-open .container {
     width: min(calc(100vw - 244px - 48px), 780px) !important;

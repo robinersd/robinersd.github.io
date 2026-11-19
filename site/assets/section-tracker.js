@@ -57,6 +57,9 @@ export function enableSectionTracker() {
     panel.inert = !value;
     panel.classList.toggle('is-mobile-open', value && !desktop.matches);
     root.classList.toggle('sidebar-open', value);
+    if (typeof Event === 'function' && typeof window.dispatchEvent === 'function') {
+      window.dispatchEvent(new Event('robiner:sidebar-toggle'));
+    }
     if (!animate || reducedMotion.matches || typeof panel.animate !== 'function') {
       panel.hidden = !value;
       return;
