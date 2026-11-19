@@ -280,7 +280,7 @@
     width: 244px !important;
     height: 100vh !important;
     max-height: 100vh !important;
-    padding: 0 !important;
+    padding: 64px 0 0 !important;
     border-radius: 0 !important;
     border-right: 1px solid var(--line) !important;
     border-left: none !important;
@@ -291,6 +291,9 @@
     -webkit-backdrop-filter: blur(14px) !important;
   }
   .portfolio-sidebar[hidden] {
+    display: none !important;
+  }
+  .phone-section-indicator {
     display: none !important;
   }
   .robiner-chat,
@@ -311,12 +314,12 @@
     flex: 0 0 auto !important;
   }
   .sidebar-scroll-content {
-    padding-top: 22px !important;
+    padding-top: 8px !important;
     padding-bottom: 56px !important;
   }
   .section-tracker-heading {
-    margin: 0 0 18px 8px !important;
-    padding-left: 44px !important;
+    margin: 0 0 12px 8px !important;
+    padding-left: 0 !important;
     line-height: 24px !important;
   }
   .sidebar-phone-close {
