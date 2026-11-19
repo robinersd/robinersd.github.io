@@ -25,7 +25,7 @@ import {
   spotifyPlaylists,
   spotifyQueue,
   skillPreviews,
-} from './data.js?v=gallery-photos-123';
+} from './data.js?v=cert-icct-131';
 import { enableRobinerMotion } from './motion.js?v=chat-56';
 import { enableRobinerProjectDeck } from './project-deck.js?v=costume-tablet-106';
 import { enableRobinerProfile } from './profile.js?v=profile-cycle-126';

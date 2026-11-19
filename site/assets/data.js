@@ -278,8 +278,8 @@ export const award = {
   date: 'November 17, 2025',
   description:
     'Certificate of Recognition for outstanding performance in COEPRO6 — Object-Oriented Programming, including OOP, data structures, algorithms, and system logic.',
-  image: '/assets/images/certificates/oop-restored.webp',
-  imageSmall: '/assets/images/certificates/oop-restored-768.webp',
+  image: '/assets/images/certificates/oop-restored.webp?v=cert-icct-131',
+  imageSmall: '/assets/images/certificates/oop-restored-768.webp?v=cert-icct-131',
 };
 
 // Keep chatbot facts linked to the same source data displayed on the website.
