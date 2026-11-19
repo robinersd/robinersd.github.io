@@ -237,11 +237,11 @@ test('the current section follows scrolling both ways, preserves focus and batch
   );
 });
 
-test('tablet portrait widths use desktop navigation while phones start with a closed menu', async () => {
+test('menu starts closed by default across phone, tablet, and desktop widths', async () => {
   for (const width of [390, 699, 700, 744, 768, 820, 1024]) {
     const h = await setup({ width });
-    assert.equal(h.tracker.hidden, width < 700, `initial navigation at ${width}px`);
-    assert.equal(h.tracker.inert, width < 700, `navigation is usable at ${width}px`);
+    assert.equal(h.tracker.hidden, true, `initial navigation closed at ${width}px`);
+    assert.equal(h.tracker.inert, true, `closed navigation is inert at ${width}px`);
     h.stop();
   }
 });
@@ -327,8 +327,12 @@ test('route cleanup removes pending work and listeners; persistent menu remains 
   subpage.stop();
 });
 
-test('desktop menu starts open, stays open while reading and navigating, and closes explicitly', async () => {
+test('desktop menu starts closed, opens explicitly, stays open while reading, and closes explicitly', async () => {
   const h = await setup({ desktop: true });
+  assert.equal(h.toggle.attrs.get('aria-expanded'), 'false');
+  assert.equal(h.tracker.hidden, true);
+  assert.equal(h.root.classes.has('sidebar-open'), false);
+  h.toggle.emit('click');
   assert.equal(h.toggle.attrs.get('aria-expanded'), 'true');
   assert.equal(h.tracker.hidden, false);
   assert.equal(h.root.classes.has('sidebar-open'), true);
@@ -357,21 +361,25 @@ test('desktop menu starts open, stays open while reading and navigating, and clo
   h.stop();
 });
 
-test('a visitor closing the menu stays respected across route initialization and viewport changes', async () => {
+test('a visitor toggling the menu stays respected across route initialization and viewport changes', async () => {
   const h = await setup({ desktop: true });
-  h.toggle.emit('click');
   assert.equal(h.tracker.hidden, true);
+  h.toggle.emit('click');
+  assert.equal(h.tracker.hidden, false);
   h.stop();
   const stopAgain = h.restart();
-  assert.equal(h.tracker.hidden, true);
+  assert.equal(h.tracker.hidden, false);
   h.media.matches = true;
   h.media.emit('change');
-  assert.equal(h.tracker.hidden, true);
+  assert.equal(h.tracker.hidden, false);
   stopAgain();
 });
 
 test('menu slides fully in from the left, closes with a slide, and survives rapid toggles', async () => {
   const h = await setup({ desktop: true, animated: true });
+  assert.equal(h.tracker.hidden, true);
+  assert.equal(h.animations.length, 0);
+  h.toggle.emit('click');
   assert.equal(h.tracker.hidden, false);
   assert.equal(h.animations[0].keyframes[0].transform, 'translateX(-312px)');
   assert.equal(h.animations[0].keyframes[1].transform, 'translateX(0)');
@@ -396,6 +404,9 @@ test('menu slides fully in from the left, closes with a slide, and survives rapi
   h.stop();
   const reduced = await setup({ desktop: true, reduced: true, animated: true });
   assert.equal(reduced.animations.length, 0);
+  assert.equal(reduced.tracker.hidden, true);
+  reduced.toggle.emit('click');
+  assert.equal(reduced.tracker.hidden, false);
   reduced.toggle.emit('click');
   assert.equal(reduced.tracker.hidden, true);
   reduced.stop();

@@ -39,9 +39,7 @@ export function enableSectionTracker() {
   let stopped = false;
   let animation;
   const firstOpen = !toggle.dataset.sidebarState;
-  let expanded = toggle.dataset.sidebarState
-    ? toggle.dataset.sidebarState === 'open'
-    : desktop.matches;
+  let expanded = toggle.dataset.sidebarState === 'open';
   const removeListeners = [];
   function listen(target, type, callback, options) {
     target.addEventListener(type, callback, options);
