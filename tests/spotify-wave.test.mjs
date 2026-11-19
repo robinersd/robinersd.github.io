@@ -214,17 +214,14 @@ test('music attempts autoplay, handles blocked playback and advances the request
   );
   assert.equal(frame.title, 'Spotify track: Dear Reader — Taylor Swift');
   events.get('ready')();
-  assert.equal(plays, 1, 'The initial ready event attempts autoplay without a tap');
+  assert.equal(plays, 0, 'The initial ready event does not autoplay without a tap');
   events.get('ready')();
-  assert.equal(plays, 1, 'Repeated ready events cannot duplicate autoplay');
+  assert.equal(plays, 0, 'Repeated ready events cannot start automatic playback');
   assert.equal(resumes, 0, 'RESUME is only used after playback has actually started');
   assert.equal(dialog.modal, false);
-  const blocked = [...timers.values()].find((timer) => timer.delay === 6000);
-  blocked.callback();
   assert.equal(toggle.attrs.get('aria-label'), 'Play Spotify music');
-  assert.equal(dialog.modal, false, 'Blocked autoplay must not force the chooser open');
   await toggle.emit('click');
-  assert.equal(plays, 2, 'A real wave tap retries blocked autoplay directly');
+  assert.equal(plays, 1, 'A real wave tap starts default music directly');
   const manualBlocked = [...timers.values()].find((timer) => timer.delay === 6000);
   manualBlocked.callback();
   assert.equal(toggle.attrs.get('aria-label'), 'Open Spotify playback controls');
@@ -258,14 +255,14 @@ test('music attempts autoplay, handles blocked playback and advances the request
   assert.equal(entities.length, 1, 'Buffering must not count as completion');
   update(dear, 225000, 225000, true);
   assert.equal(entities[1], `spotify:track:${drinking}`);
-  assert.equal(plays, 3, 'I Quit Drinking starts after Dear Reader');
+  assert.equal(plays, 2, 'I Quit Drinking starts after Dear Reader');
   update(dear, 225000, 225000, true);
   assert.equal(entities.length, 2, 'Duplicate completion events must not skip the next track');
   events.get('playback_started')({ data: { playingURI: `spotify:track:${drinking}` } });
   update(drinking, 170800, 171000);
   update(drinking, 0, 171000, true);
   assert.equal(entities[2], `spotify:track:${thirteen}`, 'An end-position reset advances to 13');
-  assert.equal(plays, 4);
+  assert.equal(plays, 3);
   events.get('playback_started')({ data: { playingURI: `spotify:track:${thirteen}` } });
   update(thirteen, 234000, 234000, true);
   update(thirteen, 234000, 234000, true);
@@ -291,7 +288,7 @@ test('music attempts autoplay, handles blocked playback and advances the request
   await new Promise((resolve) => setImmediate(resolve));
   events.get('ready')();
   assert.equal(creates, 2, 'Wave can start again after stopping');
-  assert.equal(plays, 5, 'A fresh controller starts with PLAY again');
+  assert.equal(plays, 4, 'A fresh controller starts with PLAY again');
   assert.equal(resumes, 2);
   assert.equal(
     entities[4],

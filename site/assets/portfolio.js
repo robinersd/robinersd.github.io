@@ -30,10 +30,9 @@ import { enableRobinerMotion } from './motion.js?v=chat-56';
 import { enableRobinerProjectDeck } from './project-deck.js?v=costume-tablet-106';
 import { enableRobinerProfile } from './profile.js?v=profile-cycle-126';
 import { enableRobinerNavigation, basePath } from './navigation.js?v=v2-fix';
-import { renderPixelGallery, enablePixelGallery } from './pixel-gallery.js?v=gallery-cards-124';
-import { enableRobinerSpotify } from './spotify.js?v=gallery-video-120';
-import { enableGalleryVideo } from './gallery-video.js?v=gallery-edges-122';
-import { enableSectionTracker } from './section-tracker.js?v=costume-tablet-106';
+import { renderPixelGallery, enablePixelGallery } from './pixel-gallery.js?v=no-gallery-video-127';
+import { enableRobinerSpotify } from './spotify.js?v=no-autoplay-127';
+import { enableSectionTracker } from './section-tracker.js?v=desktop-menu-127';
 import { enableTextType } from './text-type.js?v=spotify-hint-86';
 import {
   renderCommunityPanel,
@@ -653,7 +652,7 @@ function chatWidget() {
 }
 
 function homePage() {
-  const musicHint = 'On the left side, tap the Spotify wave to stop the music.';
+  const musicHint = 'On the left side, tap the Spotify wave to play the music.';
   const typedHint = `<span class="text-type" data-text-type="${musicHint}"><span class="text-type__sr">${musicHint}</span><span class="text-type__measure" aria-hidden="true">${musicHint}_</span><span class="text-type__content" aria-hidden="true"><span data-text-type-output>${musicHint}</span><span class="text-type__caret">&#8203;</span></span><span class="text-type__cursor text-type__cursor--underscore" aria-hidden="true" hidden><span class="text-type__blink"><span class="text-type__shape"></span></span></span></span>`;
   return /* HTML */ `${renderHomeStars()}
     <section class="hero" id="intro" data-scroll-section="Intro">
@@ -859,7 +858,7 @@ if (window.location.pathname.replace(/\/$/, '') === `${basePath}/experience`) {
 }
 renderPage();
 // The persistent player gets first access to the API already loading in <head>.
-const spotifyPlayback = enableRobinerSpotify(spotifyPlaylists, spotifyQueue);
+enableRobinerSpotify(spotifyPlaylists, spotifyQueue);
 
 // Native dialog provides focus trapping, Escape-to-close, and focus restoration.
 const viewer = document.querySelector('#photo-viewer');
@@ -951,7 +950,6 @@ let stopMotion;
 let stopProjectDeck;
 let stopProfile;
 let stopGallery;
-let stopGalleryVideo;
 let stopSkills;
 let stopResume;
 let stopDock;
@@ -982,11 +980,9 @@ function initializeMain({ pageEntry = false } = {}) {
   stopProjectDeck?.();
   stopProfile?.();
   stopGallery?.();
-  stopGalleryVideo?.();
   stopSkills?.();
   stopSkills = enableStaggeredSkills();
   stopGallery = enablePixelGallery(gallery, {
-    onDoubleTap: () => stopGalleryVideo?.togglePlayback?.(),
     onOpen: (index, tile) => {
       showPhoto(index);
       viewer.showModal();
@@ -1011,7 +1007,6 @@ function initializeMain({ pageEntry = false } = {}) {
     },
   });
 
-  stopGalleryVideo = enableGalleryVideo(spotifyPlayback);
   stopProfile = enableRobinerProfile();
   stopProjectDeck = enableRobinerProjectDeck();
   stopMotion = enableRobinerMotion({ pageEntry });

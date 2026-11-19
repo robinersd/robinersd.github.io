@@ -1,11 +1,6 @@
-/* Photos explore the full gallery canvas; only the video uses the shorter strip. */
 .pixel-gallery-zone {
   position: relative;
-  width: var(--gallery-width, 100%);
-  margin-inline-start: var(--gallery-shift, 0px);
-  --gallery-video-height: clamp(220px, 25vw, 300px);
-  --gallery-card-width: clamp(280px, 55vw, 680px);
-  --gallery-card-gap: 24px;
+  width: 100%;
   height: clamp(440px, 45vw, 560px);
   overflow: hidden;
   contain: paint;
@@ -29,7 +24,6 @@
   z-index: 1;
 }
 
-
 .pixel-trail-image {
   position: absolute;
   pointer-events: none;
@@ -47,77 +41,6 @@
 
 @media (max-width: 600px) {
   .pixel-gallery-zone {
-    --gallery-video-height: 200px;
-    --gallery-card-gap: 16px;
     height: 400px;
   }
 }
-
-.gallery-video-viewport {
-  position: absolute;
-  inset-inline: 0;
-  top: 50%;
-  height: var(--gallery-video-height);
-  transform: translateY(-50%);
-  overflow: hidden;
-}
-
-.gallery-video-track {
-  position: absolute;
-  inset: 0 auto 0 0;
-  display: flex;
-  gap: var(--gallery-card-gap);
-  width: max-content;
-  padding-right: var(--gallery-card-gap);
-  height: 100%;
-  will-change: transform;
-  animation: gallery-video-scroll 40s linear infinite paused;
-}
-.pixel-gallery-zone[data-video-playing='true'] .gallery-video-track { animation-play-state: running; }
-@keyframes gallery-video-scroll { to { transform: translateX(-50%); } }
-@media (prefers-reduced-motion: reduce) {
-  .gallery-video-track { animation: none; transform: none; }
-}
-.pixel-gallery-video {
-  display: block;
-  flex: 0 0 var(--gallery-card-width);
-  width: var(--gallery-card-width);
-  border-radius: 24px;
-  height: 100%;
-  max-width: none;
-  object-fit: cover;
-  object-position: center;
-  pointer-events: none;
-  z-index: 0;
-  background: #101817;
-}
-.gallery-video-controls {
-  position: absolute;
-  bottom: calc((100% - var(--gallery-video-height)) / 2 + 12px);
-  right: 12px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  max-width: calc(100% - 24px);
-  z-index: 2;
-}
-.gallery-video-controls button {
-  min-height: 32px;
-  width: 32px;
-  height: 32px;
-  padding: 6px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  color: #fff;
-  font-size: 12px;
-  line-height: 1.4;
-  cursor: pointer;
-}
-.gallery-video-controls button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
-
-.gallery-video-controls button { display: inline-grid; place-items: center; }
-.gallery-video-controls button svg { width: 20px; height: 20px; filter: drop-shadow(0 1px 2px #000b); }
-[data-gallery-sound][data-muted='true'] .gallery-sound-on,
-[data-gallery-sound][data-muted='false'] .gallery-sound-off { display: none; }

@@ -202,7 +202,48 @@
     z-index: 100 !important;
   }
   .sidebar-toggle {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    position: fixed !important;
+    top: 14px !important;
+    left: 14px !important;
+    width: 40px !important;
+    height: 40px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 1px solid var(--cn-edge) !important;
+    border-radius: 10px !important;
+    background: color-mix(in srgb, var(--surface) 88%, transparent) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    color: var(--ink) !important;
+    cursor: pointer !important;
+    z-index: 110 !important;
+  }
+  .sidebar-toggle:hover {
+    color: var(--accent) !important;
+    background: var(--tag) !important;
+  }
+  .sidebar-toggle .card-nav__menu-label {
     display: none !important;
+  }
+  .sidebar-toggle .card-nav__burger {
+    width: 18px !important;
+    height: 14px !important;
+  }
+  .sidebar-toggle .card-nav__line {
+    height: 2px !important;
+    transform: none !important;
+  }
+  .sidebar-toggle .card-nav__line--top {
+    top: 0 !important;
+  }
+  .sidebar-toggle .card-nav__line--middle {
+    top: 6px !important;
+  }
+  .sidebar-toggle .card-nav__line--bottom {
+    top: 12px !important;
   }
   .card-nav__arrow {
     display: none !important;
@@ -234,13 +275,13 @@
     border-right: 1px solid var(--line) !important;
     border-left: none !important;
     box-shadow: none !important;
-    transform: none !important;
-    opacity: 1 !important;
-    visibility: visible !important;
     z-index: 90 !important;
     background: color-mix(in srgb, var(--surface) 86%, transparent) !important;
     backdrop-filter: blur(14px) !important;
     -webkit-backdrop-filter: blur(14px) !important;
+  }
+  .portfolio-sidebar[hidden] {
+    display: none !important;
   }
   .robiner-chat,
   :root.sidebar-open .robiner-chat {
@@ -260,13 +301,24 @@
     flex: 0 0 auto !important;
   }
   .sidebar-scroll-content {
-    padding-top: 32px !important;
+    padding-top: 22px !important;
     padding-bottom: 56px !important;
+  }
+  .section-tracker-heading {
+    margin: 0 0 18px 8px !important;
+    padding-left: 44px !important;
+    line-height: 24px !important;
   }
   .sidebar-phone-close {
     display: none !important;
   }
   .container {
+    width: min(calc(100vw - 48px), 780px) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    transition: margin-left 260ms cubic-bezier(.22, 1, .36, 1), width 260ms cubic-bezier(.22, 1, .36, 1);
+  }
+  :root.sidebar-open .container {
     width: min(calc(100vw - 244px - 48px), 780px) !important;
     margin-left: calc(244px + max(24px, (100vw - 244px - 780px) / 2)) !important;
     margin-right: max(24px, calc((100vw - 244px - 780px) / 2)) !important;
@@ -699,7 +751,7 @@
 @media (min-width: 700px) and (max-width: 1023px) {
   :root { --sidebar-width: 192px; }
   .portfolio-sidebar { width: 192px !important; }
-  .container {
+  :root.sidebar-open .container {
     width: calc(100% - 224px) !important;
     margin-left: 208px !important;
     margin-right: 16px !important;

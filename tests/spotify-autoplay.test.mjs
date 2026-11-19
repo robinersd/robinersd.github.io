@@ -117,7 +117,7 @@ async function setup({ desktop = true, loading = false } = {}) {
   });
   vm.runInContext(source + '\nglobalThis.enable = enableRobinerSpotify;', context);
   const track = { id: 'a'.repeat(22), title: 'Default music', type: 'track' };
-  const playback = context.enable([{ ...track, id: 'b'.repeat(22) }], [track]);
+  context.enable([{ ...track, id: 'b'.repeat(22) }], [track]);
   const flush = () => new Promise((resolve) => setImmediate(resolve));
   await flush();
   return {
@@ -126,7 +126,6 @@ async function setup({ desktop = true, loading = false } = {}) {
     wave,
     playlist,
     calls,
-    playback,
     timers,
     ready: () => events.get('ready')(),
     playing: () => events.get('playback_started')(),
@@ -138,119 +137,34 @@ async function setup({ desktop = true, loading = false } = {}) {
   };
 }
 
-test('blocked desktop autoplay retries once on a trusted page click without opening the player', async () => {
+test('default Spotify music stays silent on load and unrelated page gestures', async () => {
   const h = await setup();
   h.ready();
-  assert.equal(h.calls.play, 1);
-  for (const callback of [...h.timers.values()]) callback();
-  h.doc.emit('click', { isTrusted: false });
-  h.doc.emit('pointermove');
-  h.doc.emit('scroll');
-  assert.equal(h.calls.play, 1, 'Synthetic events and scrolling cannot start playback');
+  assert.equal(h.calls.play, 0, 'Ready event must not autoplay sound');
   h.doc.emit('click');
-  assert.equal(h.calls.play, 2);
-  assert.equal(h.dialog.modal, false, 'Retry keeps the wave minimized');
-  h.doc.emit('click');
+  h.doc.emit('mousedown', { button: 0 });
   h.doc.emit('keydown', { key: 'Enter' });
-  h.ready();
-  assert.equal(h.calls.play, 2, 'Later gestures and readiness cannot repeat the retry');
+  h.doc.emit('keydown', { key: ' ' });
+  assert.equal(h.calls.play, 0, 'Unrelated page clicks and keys must not start Spotify');
+  assert.equal(h.dialog.modal, false, 'Wave stays minimized');
 });
 
-test('early page gestures preserve a retry until Spotify is ready without duplicate startup plays', async () => {
-  const h = await setup({ loading: true });
-  h.doc.emit('click');
-  h.doc.emit('click');
-  assert.equal(h.calls.play, 0);
-  await h.load();
-  h.ready();
-  h.ready();
-  assert.equal(h.calls.play, 1);
-  h.doc.emit('click');
-  assert.equal(h.calls.play, 2, 'A fresh ready gesture still retries a blocked initial play');
-  h.doc.emit('click');
-  assert.equal(h.calls.play, 2);
-});
-
-test('manual wave, stop, playlist selection and opening the picker cancel startup recovery', async () => {
-  for (const action of ['wave', 'stop', 'playlist', 'picker']) {
-    const h = await setup();
-    h.ready();
-    if (action === 'wave') h.wave.emit('click');
-    if (action === 'stop') h.dialog.querySelector('.spotify-stop').emit('click');
-    if (action === 'playlist') h.playlist.emit('click');
-    if (action === 'picker') {
-      const opener = new Element();
-      h.doc.emit('click', { target: { closest: () => opener } });
-      h.dialog.querySelector('.spotify-close').emit('click');
-    }
-    const plays = h.calls.play;
-    h.doc.emit('click');
-    assert.equal(h.calls.play, plays, `${action} must not be followed by unwanted autoplay`);
-  }
-});
-
-test('confirmed playback followed by a manual pause stays paused on unrelated desktop clicks', async () => {
+test('explicit wave tap starts playback, pauses cleanly, and resumes on tap', async () => {
   const h = await setup();
   h.ready();
+  h.wave.emit('click');
+  assert.equal(h.calls.play, 1, 'Tapping the wave starts the default track');
   h.playing();
   h.wave.emit('click');
   h.paused();
-  h.doc.emit('click');
   assert.equal(h.calls.pause, 1);
-  assert.equal(h.calls.play, 1);
-  assert.equal(h.calls.resume, 0);
-});
-
-test('phone taps and desktop keyboard activation retry only once', async () => {
-  const phone = await setup({ desktop: false });
-  phone.ready();
-  phone.doc.emit('click');
-  phone.doc.emit('keydown', { key: 'Enter' });
-  assert.equal(phone.calls.play, 2, 'Phone page tap retries the blocked autoplay');
-  phone.wave.emit('click');
-  assert.equal(phone.calls.play, 3, 'Phone wave remains a direct play button');
-  for (const key of ['Enter', ' ']) {
-    const h = await setup();
-    h.ready();
-    h.doc.emit('keydown', { key: 'ArrowDown' });
-    h.doc.emit('keydown', { key, repeat: true });
-    h.doc.emit('keydown', { key, ctrlKey: true });
-    assert.equal(h.calls.play, 1);
-    h.doc.emit('keydown', { key });
-    h.doc.emit('click');
-    assert.equal(h.calls.play, 2);
-  }
-});
-
-test('a left mouse press starts the retry before a drag; hover and other buttons do nothing', async () => {
-  const h = await setup();
-  h.ready();
-  h.doc.emit('mousemove');
-  h.doc.emit('pointermove');
-  h.doc.emit('mousedown', { button: 2 });
-  h.doc.emit('mousedown', { button: 0, isTrusted: false });
-  assert.equal(h.calls.play, 1);
-  h.doc.emit('mousedown', { button: 0 });
-  assert.equal(h.calls.play, 2);
-  h.doc.emit('mousemove', { buttons: 1 });
-  h.doc.emit('mouseup', { button: 0 });
   h.doc.emit('click');
-  assert.equal(h.calls.play, 2, 'Drag and its release do not repeat or toggle playback');
-});
-
-test('pressing or dragging explicit Spotify controls cannot trigger the page retry', async () => {
-  const h = await setup();
-  h.ready();
-  const target = { closest: () => h.dialog };
-  h.doc.emit('mousedown', { button: 0, target });
-  assert.equal(h.calls.play, 1);
+  assert.equal(h.calls.resume, 0, 'Unrelated clicks never resume paused music');
   h.wave.emit('click');
-  const plays = h.calls.play;
-  h.doc.emit('mousedown', { button: 0 });
-  assert.equal(h.calls.play, plays);
+  assert.equal(h.calls.resume, 1, 'Tapping the wave resumes paused music');
 });
 
-test('first wave tap while loading requests playback; a second explicit tap can cancel it', async () => {
+test('first wave tap while loading requests playback; a second explicit tap cancels it', async () => {
   for (const taps of [1, 2]) {
     const h = await setup({ loading: true });
     for (let tap = 0; tap < taps; tap++) h.wave.emit('click');
@@ -258,59 +172,16 @@ test('first wave tap while loading requests playback; a second explicit tap can 
     h.ready();
     assert.equal(h.calls.play, taps === 1 ? 1 : 0);
     h.doc.emit('click');
-    assert.equal(
-      h.calls.play,
-      taps === 1 ? 1 : 0,
-      'Page gestures cannot undo explicit wave intent',
-    );
+    assert.equal(h.calls.play, taps === 1 ? 1 : 0);
   }
 });
 
-test('a restricted page-initiated retry retains the official player recovery via the wave', async () => {
+test('a restricted manual wave play retains the official player recovery via the wave', async () => {
   const h = await setup();
   h.ready();
-  h.doc.emit('click');
+  h.wave.emit('click');
   for (const callback of [...h.timers.values()]) callback();
   assert.equal(h.dialog.modal, false, 'Failure does not interrupt the page with a modal');
   h.wave.emit('click');
   assert.equal(h.dialog.modal, true, 'The visitor can reach Spotify native Play if required');
-});
-
-test('gallery waits for Spotify pause acknowledgement and resumes only previously requested music', async () => {
-  const h=await setup();h.ready();h.playing();
-  const held=h.playback.suspendForGallery();
-  assert.equal(h.calls.pause,1);
-  assert.equal(h.playback.galleryIsSilent(),false);
-  h.paused();assert.equal(await held,true);
-  h.doc.emit('click');assert.equal(h.calls.resume,0,'page gestures cannot restart held music');
-  h.playback.releaseGallery();assert.equal(h.calls.resume,1);
-  h.playing();h.wave.emit('click');h.paused();
-  await h.playback.suspendForGallery();h.playback.releaseGallery();
-  assert.equal(h.calls.resume,1,'a manual Spotify pause stays paused after the gallery');
-});
-
-test('gallery prevents delayed Spotify initialization from autoplaying until release', async () => {
-  const h=await setup({loading:true});await h.playback.suspendForGallery();
-  await h.load();h.ready();assert.equal(h.calls.play,0);
-  h.playback.releaseGallery();assert.equal(h.calls.play,1);
-});
-
-test('explicit music takeover notifies the gallery before resuming and stopping cancels automatic resume', async () => {
-  const h=await setup();h.ready();h.playing();
-  let takeover=0;h.playback.onGalleryTakeover(()=>{takeover++;assert.equal(h.calls.resume,0);});
-  let held=h.playback.suspendForGallery();h.paused();await held;
-  h.wave.emit('click');assert.equal(takeover,1);assert.equal(h.calls.resume,1);
-  h.playing();held=h.playback.suspendForGallery();h.paused();await held;
-  h.dialog.querySelector('.spotify-stop').emit('click');
-  h.playback.releaseGallery();assert.equal(h.calls.resume,1);
-});
-
-test('late Spotify playback while held is immediately paused and reports unsafe audio', async () => {
-  const h=await setup();h.ready();h.playing();
-  const held=h.playback.suspendForGallery();h.paused();await held;
-  const states=[];h.playback.onGallerySilence(value=>states.push(value));
-  const pauses=h.calls.pause;h.playing();assert.equal(h.calls.pause,pauses+1);
-  assert.equal(states.at(-1),false);
-  h.paused();assert.equal(states.at(-1),true);
-  h.playback.releaseGallery(false);assert.equal(h.calls.resume,0);
 });
